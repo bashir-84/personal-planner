@@ -1,0 +1,4 @@
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:7px}
+.appointment{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.appointment input{min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px}
+@media(max-width:600px){.appointment{grid-template-columns:1fr 1fr}.appointment input:first-child{grid-column:1/-1}}

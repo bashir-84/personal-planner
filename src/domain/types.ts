@@ -1,0 +1,9 @@
+export type DeadlineKind = "none" | "hard" | "flexible";
+export type Task = { id:string; title:string; projectId?:string; duration:number; estimateSource:"default"|"manual"; importance?:number; urgency?:number; deadline?:string; deadlineKind:DeadlineKind; plannedDay?:string; completed:boolean; createdAt:string };
+export type Note = { id:string; text:string; createdAt:string };
+export type Project = { id:string; name:string; color:string };
+export type Appointment = { id:string; title:string; day:string; start:number; end:number; blocking:boolean };
+export type PlanItem = { taskId:string; day:string; start?:number; end?:number; conflict?:string };
+export type Draft = { id:string; baseRevision:number; createdAt:string; items:PlanItem[]; conflicts:Conflict[] };
+export type Conflict = { type:"capacity"|"continuity"|"deadline"|"changed"; day?:string; taskId?:string; minutes?:number; message:string };
+export type PlannerState = { revision:number; projects:Project[]; tasks:Task[]; notes:Note[]; appointments:Appointment[]; confirmed:PlanItem[]; draft?:Draft; manualBudgets:Record<string,number> };
