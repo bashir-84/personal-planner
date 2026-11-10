@@ -54,6 +54,19 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .weekTask{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px;min-height:34px;padding:5px 6px;border:1px solid #e3e6ec;border-right:3px solid var(--project);border-radius:6px;background:#fff;direction:rtl}
 .weekTask span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:550}
 .weekTask b{font-size:10px;font-weight:500;color:var(--muted);direction:ltr}
+.weekTask{grid-template-columns:auto minmax(0,1fr) auto;cursor:grab}
+.weekTask:active{cursor:grabbing}
+.weekTask[draggable="true"]:hover{border-color:#b8c3d4;box-shadow:0 2px 8px #17243a12}
+.weekDragHandle{display:inline-flex;color:#9aa4b2;cursor:grab}
+.weekDragHandle .icon{width:14px;height:14px}
+.weekTaskTitle{display:block;min-width:0;min-height:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0;border:0;border-radius:0;background:transparent;color:var(--ink);text-align:right;font-size:12px;font-weight:550}
+.weekTaskTitle:hover{background:transparent;color:#2447b7}
+.draftHeadActions{display:flex;align-items:center;gap:4px}
+.draftTaskTitle{display:block;width:100%;padding:0;border:0;border-radius:0;background:transparent;text-align:right;font-weight:650;font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.draftTaskTitle:hover{color:var(--blue,#2447b7);background:transparent}
+.taskDetailMeta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.taskDetailMeta span{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
+.taskDetailMeta b{color:var(--ink);font-weight:600}
 .taskListRow,.confirmedRow{border-inline-start:1px solid #e3e6ec;border-inline-end:4px solid var(--project)}
 .taskMain{position:relative;isolation:isolate;gap:6px}
 .taskMain::before{content:"";position:absolute;z-index:-1;inset-block:1px;inset-inline-start:0;width:34px;border-radius:6px;background:var(--project)}
