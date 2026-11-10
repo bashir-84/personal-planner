@@ -97,6 +97,23 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .taskTitle,.draftTaskTitle{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.35}
 .draftTaskTitle{min-height:0;padding:2px 0;text-align:right}
 .weekTaskTitle{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.35}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;grid-template-areas:"workload newtask" "confirmed calendar" "open open" "projects notes"}
+.grid.weekMode{grid-template-areas:"workload newtask" "weekly weekly" "open calendar" "projects notes"}
+.grid>.workload{grid-area:workload;align-self:stretch;margin:0;min-width:0}
+.grid>.stack{display:contents}
+.topNewTask{grid-area:newtask;align-self:stretch}
+.confirmedCard{grid-area:confirmed;min-width:0}
+.weeklyPlanCard{grid-area:weekly;min-width:0}
+.openTasksCard{grid-area:open;min-width:0}
+.calendarCard{grid-area:calendar;min-width:0}
+.utilityProjects{grid-area:projects;align-self:start}
+.utilityNotes{grid-area:notes;align-self:start}
+.todayJump{min-height:36px;padding:5px 12px;border-color:#cbd5f0;background:#edf1ff;color:#2447b7;font-size:12px;font-weight:650;white-space:nowrap}
+.todayJump:hover{background:#dfe7ff}
+.dateStrip button[data-today=true]{border-color:#2447b7;background:#2447b7;color:#fff;box-shadow:0 2px 5px #2447b733}
+.dateStrip button[data-today=true] small{color:#e8edff}
+.dateStrip button[data-today=true] bdi{color:#fff}
+@media(max-width:760px){.grid,.grid.weekMode{grid-template-columns:minmax(0,1fr);grid-template-areas:none;gap:12px}.grid>.stack{display:grid;gap:12px}.grid>.workload{margin:0}.grid .topNewTask,.grid .confirmedCard,.grid .weeklyPlanCard,.grid .openTasksCard,.grid .calendarCard,.grid .utilityProjects,.grid .utilityNotes{grid-area:auto}}
 .completionHistory{grid-column:1/-1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
 .completionHistory ul{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
 .completionHistory li{padding:4px 8px;border-radius:6px;background:#f2f4f7;color:var(--ink)}
