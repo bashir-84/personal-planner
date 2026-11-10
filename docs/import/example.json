@@ -1,0 +1,42 @@
+{
+  "format": "personal-planner-tasks",
+  "schema_version": "1.0.0",
+  "timezone": "Asia/Tehran",
+  "projects": [
+    {
+      "id": "p1",
+      "name": "پروژه شخصی"
+    }
+  ],
+  "tasks": [
+    {
+      "title": "بررسی یادداشت‌های روزانه"
+    },
+    {
+      "id": "journal-02",
+      "title": "ارسال گزارش",
+      "project_id": "p1",
+      "estimated_minutes": null,
+      "priority": {
+        "importance": null,
+        "urgency": null
+      },
+      "deadline_at": null,
+      "source": {
+        "app": "ai-journal",
+        "original_id": null
+      }
+    },
+    {
+      "id": "journal-03",
+      "title": "تمرین زبان",
+      "estimated_minutes": 20,
+      "recurrence": {
+        "frequency": "daily",
+        "interval": 1,
+        "start_date": null
+      },
+      "notes": "تاریخ شروع مشخص نیست"
+    }
+  ]
+}
