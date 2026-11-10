@@ -2,5 +2,5 @@ import "./globals.css";import "./forms.css";import "./workload.css";import "./mi
 import localFont from "next/font/local";
 import "./white-theme.css";
 const vazirmatn=localFont({src:"../../public/fonts/Vazirmatn-VariableFont_wght.ttf",variable:"--font-vazirmatn",display:"swap",weight:"100 900"});
-export const metadata:Metadata={title:"پلنر شخصی",description:"نمونهٔ اجرایی مرحلهٔ ۰٫۱"};
-export default function Layout({children}:{children:React.ReactNode}){return <html lang="fa" dir="rtl"><body className={vazirmatn.variable}>{children}</body></html>}
+export const metadata:Metadata={title:"Personal Planner",description:"A compact, capacity-aware personal planner"};
+export default function Layout({children}:{children:React.ReactNode}){return <html lang="en" dir="ltr"><body className={vazirmatn.variable}>{children}</body></html>}

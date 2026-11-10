@@ -31,24 +31,6 @@ jobs:
         run: npm test
       - name: Build static site
         run: npm run build
-      - name: Use Actions as the Pages publishing source
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const repo = context.repo;
-            const before = await github.request('GET /repos/{owner}/{repo}/pages', repo);
-            core.info(`Pages build type: ${before.data.build_type}; URL: ${before.data.html_url}`);
-            if (before.data.build_type !== 'workflow') {
-              await github.request('PUT /repos/{owner}/{repo}/pages', {
-                ...repo,
-                build_type: 'workflow'
-              });
-            }
-            const after = await github.request('GET /repos/{owner}/{repo}/pages', repo);
-            if (after.data.build_type !== 'workflow') {
-              core.setFailed('Pages must publish the Next.js artifact through GitHub Actions.');
-            }
-            core.info(`Pages publishing URL: ${after.data.html_url}`);
       - name: Verify exported entry points
         run: |
           test -f out/index.html
@@ -69,6 +51,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # A legacy branch deployment is still enabled in the repository. Publish
+      # this verified artifact after it, so the application remains live until
+      # an administrator switches Pages Source to GitHub Actions.
+      - name: Wait for legacy Pages deployment
+        run: sleep 90
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

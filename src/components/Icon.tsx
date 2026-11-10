@@ -9,6 +9,11 @@ const paths = {
   next: "m9 6 6 6-6 6",
   previous: "m15 6-6 6 6 6",
   close: "m6 6 12 12M6 18 18 6",
+  check: "m5 12 4 4L19 6",
+  trash: "M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6",
+  project: "M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5",
+  note: "M5 3h14v18H5zM8 8h8M8 12h8M8 16h5",
+  warning: "M12 9v4M12 17h.01M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
 } as const;
 export function Icon({name, style}: {name: keyof typeof paths; style?: CSSProperties}) {
   return <svg className="icon" style={style} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]}/></svg>;
