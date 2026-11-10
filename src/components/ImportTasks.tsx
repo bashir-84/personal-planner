@@ -2,6 +2,10 @@
 
 import { ChangeEvent, useState } from "react";
 import Link from "next/link";
+import { Icon } from "./Icon";
+import { TaskEditDialog } from "./TaskEditDialog";
+import { importReadmeMarkdown } from "@/content/importReadme";
+import type { Task } from "@/domain/types";
 import { prepareImport, mergeImport, type ImportPreview } from "@/domain/taskImport";
 import { loadState, saveState } from "@/storage/local";
 
@@ -11,6 +15,9 @@ export function ImportTasks() {
   const [acceptWarnings, setAcceptWarnings] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [edits, setEdits] = useState<Record<string, Partial<Task>>>({});
 
   const allWarnings = preview?.rows.flatMap(row => row.warnings.map(w => "#" + row.index + ": " + w)) ?? [];
   const warningsPresent = allWarnings.length > 0 || Boolean(preview?.warnings.length);
@@ -25,7 +32,7 @@ export function ImportTasks() {
 
   const changeText = (value: string) => {
     setText(value); setPreview(null); setAcceptWarnings(false);
-    setMessage(""); setSuccess(false);
+    setMessage(""); setSuccess(false); setEdits({}); setEditingKey(null);
   };
 
   async function readFile(e: ChangeEvent<HTMLInputElement>) {
@@ -39,6 +46,7 @@ export function ImportTasks() {
   }
 
   function check() {
+    setEdits({}); setEditingKey(null);
     setPreview(prepareImport(text, loadState()));
     setAcceptWarnings(false);
     setMessage("");
@@ -64,6 +72,10 @@ export function ImportTasks() {
         setMessage("Planner data changed. Review the refreshed preview.");
         return;
       }
+      // Edits made in the shared task form are applied to the newly validated rows.
+      for (const row of current.rows) {
+        if (row.task && edits[row.sourceKey]) row.task = { ...row.task, ...edits[row.sourceKey] };
+      }
       const next = mergeImport(current, latest);
       saveState(next);
       setMessage("Imported " + current.validCount + " task(s). Existing tasks were kept.");
@@ -71,6 +83,18 @@ export function ImportTasks() {
       setPreview(null);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Import failed. Nothing was saved.");
+    }
+  }
+
+  const editingRow = preview?.rows.find(row => row.sourceKey === editingKey && row.task);
+  const currentEditedTask = editingRow?.task ? { ...editingRow.task, ...(edits[editingRow.sourceKey] ?? {}) } : undefined;
+  async function copyInstructions() {
+    try {
+      await navigator.clipboard.writeText(importReadmeMarkdown);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+      setMessage("Clipboard is unavailable. Please use a secure HTTPS connection or copy the README from GitHub.");
     }
   }
 
@@ -84,6 +108,12 @@ export function ImportTasks() {
           Missing values stay unset; a 30-minute duration is explicitly marked as provisional.
         </p>
       </header>
+      <section style={{ ...panel, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 18 }} aria-label="AI instructions">
+        <div><strong>AI Instructions (README.md)</strong><p style={{ margin: "5px 0 0", opacity: .7, fontSize: 13 }}>Copy the full Markdown instructions and paste them into your AI with your journal.</p></div>
+        <button type="button" onClick={copyInstructions} style={{ ...button, background: copied ? "#e8f4ed" : "#f3f6f7", display: "inline-flex", alignItems: "center", gap: 8 }} aria-label="Copy README Markdown">
+          <Icon name={copied ? "check" : "note"} />{copied ? "Copied!" : "Copy README"}
+        </button>
+      </section>
       <section style={{ ...panel, display: "grid", gap: 14 }}>
         <label htmlFor="import-json" style={{ fontWeight: 600 }}>JSON output</label>
         <textarea
@@ -121,10 +151,12 @@ export function ImportTasks() {
                 {preview.rows.map(row =>
                   <tr key={row.index} style={{ borderTop: "1px solid #edf0f0" }}>
                     <td style={{ padding: 8 }}>{row.index}</td>
-                    <td>{row.title || "—"}</td>
+                    <td>{(edits[row.sourceKey]?.title ?? row.title) || "—"}</td>
                     <td>{row.status}</td>
-                    <td>{row.task?.duration ?? "—"}{row.task?.estimateSource === "default" ? " min (default)" : row.task ? " min" : ""}</td>
+                    <td>{edits[row.sourceKey]?.duration ?? row.task?.duration ?? "—"}{(edits[row.sourceKey]?.estimateSource ?? row.task?.estimateSource) === "default" ? " min (default)" : row.task ? " min" : ""}</td>
                     <td style={{ maxWidth: 450 }}>
+                      {row.task && <button type="button" style={{...button, display:"inline-flex", alignItems:"center", gap:5, padding:"5px 9px", marginBottom:5 }} aria-label={`Edit ${row.title}`} title={`Edit ${row.title}`} onClick={()=>setEditingKey(row.sourceKey)}><Icon name="edit" /> Edit</button>}
+
                       {row.errors.map((err, i) => <div key={"e" + i} style={{ color: "#ad2929" }}>{err}</div>)}
                       {row.warnings.map((w, i) => <div key={"w" + i} style={{ color: "#8c6000" }}>{w}</div>)}
                     </td>
@@ -145,6 +177,7 @@ export function ImportTasks() {
           </button>
         </section>
       )}
+      {currentEditedTask && editingRow && <TaskEditDialog task={currentEditedTask} projects={[...loadState().projects, ...(preview?.projects ?? [])]} onClose={()=>setEditingKey(null)} onChange={patch=>setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),...patch}}))} onToggle={completed=>{setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),completed}}));setEditingKey(null)}}/>}
     </main>
   );
 }
