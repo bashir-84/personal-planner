@@ -190,3 +190,12 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
  .capacityDialog input{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
  .capacityDialog .wide{margin-top:10px}
 }
+.headerActions{display:flex;align-items:center;gap:7px}
+.menuButton{display:grid;place-items:center;width:40px;height:40px;min-height:40px;padding:0;border-color:var(--line);background:#fff;color:var(--muted)}
+.menuButton:hover{background:#f1f4f9;color:#2447b7}
+.menuButton .icon{width:19px;height:19px}
+.menuDialog{width:min(360px,100%);padding:18px}
+.menuDialog .draftHead{margin-bottom:12px}
+.menuItem{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 12px;border-color:var(--line);background:#fff;text-align:right;font-size:14px;font-weight:600}
+.menuItem .icon{width:18px;height:18px;color:#2447b7}
+@media(max-width:760px){.minimalHeader .headerActions{grid-column:1;grid-row:2;display:flex;align-items:center;gap:6px}.minimalHeader .headerActions .planButton{grid-column:auto;grid-row:auto;justify-self:auto}.minimalHeader .menuButton{width:34px;height:34px;min-height:34px}.menuDialog{padding:14px}}

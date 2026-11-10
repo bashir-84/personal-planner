@@ -3,6 +3,8 @@ const paths = {
   plus: "M12 5v14M5 12h14",
   plan: "M8 3v4M16 3v4M4 10h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1M8 15l3 3 5-5",
   calendar: "M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z",
+  menu: "M4 6h16M4 12h16M4 18h16",
+  import: "M12 3v12m0 0 4-4m-4 4-4-4M5 17v4h14v-4",
   list: "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01",
   edit: "m15 4 5 5M4 20l5-1L21 7l-5-5L4 14v6Z",
   refresh: "M20 11a8.1 8.1 0 0 0-14.9-4M4 4v4h4M4 13a8.1 8.1 0 0 0 14.9 4M20 20v-4h-4",
