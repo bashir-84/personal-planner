@@ -28,6 +28,7 @@ test("relative deadline and ordered stages use the shared editor",async({page})=
   await expect(page.locator(".draftRow").filter({hasText:"Staged review"})).toHaveCount(2);
   await expect(page.locator(".draftRow").filter({hasText:"01 Read"})).toBeVisible();
   await expect(page.locator(".draftRow").filter({hasText:"02 Write"})).toBeVisible();
+  await expect(page.locator(".draftRow .planReason").first()).toBeVisible();
   await page.getByRole("button",{name:"Confirm",exact:true}).click();
   await page.getByRole("checkbox",{name:"Complete Staged review · 01 Read"}).check();
   await expect(page.locator(".openTasksCard")).toContainText("Staged review");
