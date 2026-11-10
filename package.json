@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/version-sw.mjs",
     "start": "next start",
     "test": "vitest run",
     "test:ui": "playwright test"
