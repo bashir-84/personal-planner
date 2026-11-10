@@ -252,6 +252,12 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .minimalHeader .datePrevious:hover,.minimalHeader .dateNext:hover{background:transparent;color:var(--ink)}
 .datePicker>div{direction:rtl}
 .datePicker>summary{direction:rtl}
+.minimalHeader .menuButton{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:2}
+.mobileCapacityButton{display:none!important}
+.workloadValue{display:flex;align-items:center;gap:8px;direction:ltr}
+.workloadEdit{display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--muted);box-shadow:0 1px 2px #15223b0d}
+.workloadEdit:hover{color:var(--blue);border-color:#bcc8e4;background:#f7f9ff}
+.workloadEdit .icon{width:16px;height:16px}
 .datePicker button{text-align:right}
 @media(max-width:760px){
  .shell{width:calc(100% - 8px)}
@@ -260,6 +266,10 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
  .minimalHeader .navLabel{font-size:9px;opacity:.58}
  .minimalHeader .datePicker{flex:0 1 auto}
  .minimalHeader .datePicker summary{padding-inline:3px}
+ .minimalHeader .menuButton{top:auto;bottom:0;transform:none;width:34px;height:34px;min-height:34px}
+ .workloadValue{gap:5px}
+ .workloadEdit{width:27px;height:27px;min-height:27px;border-radius:7px}
+ .workloadEdit .icon{width:14px;height:14px}
  .grid .topNewTask,.grid .confirmedCard{padding:5px 4px}
  .grid .topNewTask .cardHead,.grid .confirmedCard .cardHead{margin-bottom:3px;padding-inline:4px;min-height:25px}
  .grid .topNewTask .cardHead h2,.grid .confirmedCard .cardHead h2{font-size:14px;line-height:1.2}
