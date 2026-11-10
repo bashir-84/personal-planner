@@ -74,8 +74,23 @@ export function ImportTasks() {
         return;
       }
       // Edits made in the shared task form are applied to the newly validated rows.
+      // prepareImport assigns fresh IDs to projects that are not saved yet. Resolve
+      // an edited preview project by name so its ID survives this second validation.
       for (const row of current.rows) {
-        if (row.task && edits[row.sourceKey]) row.task = { ...row.task, ...edits[row.sourceKey] };
+        const edit = edits[row.sourceKey];
+        if (!row.task || !edit) continue;
+        const patch = { ...edit };
+        if (patch.projectId) {
+          const previewProject = preview?.projects.find(project => project.id === patch.projectId);
+          if (previewProject) {
+            const normalizedName = previewProject.name.trim().toLocaleLowerCase("fa-IR");
+            const currentProject = [...current.projects, ...latest.projects].find(project =>
+              project.name.trim().toLocaleLowerCase("fa-IR") === normalizedName
+            );
+            if (currentProject) patch.projectId = currentProject.id;
+          }
+        }
+        row.task = { ...row.task, ...patch };
       }
       const next = mergeImport(current, latest);
       saveState(next);
@@ -89,6 +104,11 @@ export function ImportTasks() {
 
   const editingRow = preview?.rows.find(row => row.sourceKey === editingKey && row.task);
   const currentEditedTask = editingRow?.task ? { ...editingRow.task, ...(edits[editingRow.sourceKey] ?? {}) } : undefined;
+  const editorProjects = [...loadState().projects, ...(preview?.projects ?? [])];
+  const projectName = (projectId?: string) => editorProjects.find(project => project.id === projectId)?.name ?? "—";
+  const displayDeadline = (deadline?: string) => deadline
+    ? new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Tehran" }).format(new Date(deadline))
+    : "—";
   async function copyInstructions() {
     try {
       await navigator.clipboard.writeText(importReadmeMarkdown);
@@ -148,14 +168,18 @@ export function ImportTasks() {
           )}
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead><tr><th style={{ padding: 8 }}>#</th><th>Task</th><th>Status</th><th>Duration</th><th>Details</th></tr></thead>
+              <thead><tr><th style={{ padding: 8 }}>#</th><th>Task</th><th>Status</th><th>Duration</th><th>Project</th><th>Priority</th><th>Deadline</th><th>Details</th></tr></thead>
               <tbody>
-                {preview.rows.map(row =>
-                  <tr key={row.index} style={{ borderTop: "1px solid #edf0f0" }}>
+                {preview.rows.map(row => {
+                  const task = row.task ? { ...row.task, ...(edits[row.sourceKey] ?? {}) } : undefined;
+                  return <tr key={row.index} style={{ borderTop: "1px solid #edf0f0" }}>
                     <td style={{ padding: 8 }}>{row.index}</td>
                     <td>{(edits[row.sourceKey]?.title ?? row.title) || "—"}</td>
                     <td>{row.status}</td>
-                    <td>{edits[row.sourceKey]?.duration ?? row.task?.duration ?? "—"}{(edits[row.sourceKey]?.estimateSource ?? row.task?.estimateSource) === "default" ? " min (default)" : row.task ? " min" : ""}</td>
+                    <td>{task?.duration ?? "—"}{task ? (task.estimateSource === "default" ? " min (default)" : " min") : ""}</td>
+                    <td>{task ? projectName(task.projectId) : "—"}</td>
+                    <td>{task ? `I${task.importance ?? "—"} · U${task.urgency ?? "—"}` : "—"}</td>
+                    <td>{task ? displayDeadline(task.deadline) : "—"}</td>
                     <td style={{ maxWidth: 450 }}>
                       {row.task && <button type="button" style={{...button, display:"inline-flex", alignItems:"center", gap:5, padding:"5px 9px", marginBottom:5 }} aria-label={`Edit ${row.title}`} title={`Edit ${row.title}`} onClick={()=>setEditingKey(row.sourceKey)}><Icon name="edit" /> Edit</button>}
 
@@ -163,7 +187,7 @@ export function ImportTasks() {
                       {row.warnings.map((w, i) => <div key={"w" + i} style={{ color: "#8c6000" }}>{w}</div>)}
                     </td>
                   </tr>
-                )}
+                })}
               </tbody>
             </table>
           </div>
@@ -179,7 +203,7 @@ export function ImportTasks() {
           </button>
         </section>
       )}
-      {currentEditedTask && editingRow && <TaskEditDialog task={currentEditedTask} projects={[...loadState().projects, ...(preview?.projects ?? [])]} onClose={()=>setEditingKey(null)} onChange={patch=>setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),...patch}}))} onToggle={completed=>{setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),completed}}));setEditingKey(null)}}/>}
+      {currentEditedTask && editingRow && <TaskEditDialog task={currentEditedTask} projects={editorProjects} onClose={()=>setEditingKey(null)} onChange={patch=>setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),...patch}}))} onToggle={completed=>{setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),completed}}));setEditingKey(null)}}/>}
     </main>
   );
 }
