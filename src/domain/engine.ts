@@ -40,17 +40,22 @@ export function validate(items:PlanItem[],tasks:Task[],appointments:Appointment[
       previous=item;
     }
   }
+  const warnedTargets=new Set<string>();
+  for(const item of items){const task=tasks.find(task=>task.id===item.taskId);if(!task?.recurrenceSourceId||!task.targetDay||warnedTargets.has(task.id))continue;
+    const template=tasks.find(source=>source.id===task.recurrenceSourceId);
+    if(template?.recurrence?.sameDay&&item.day!==task.targetDay){conflicts.push({type:"target",day:item.day,taskId:task.id,message:`«${task.title}» missed required day ${task.targetDay}`});warnedTargets.add(task.id)}
+  }
   return conflicts;
 }
 /** Importance 12, urgency 8, hard commitment 14, deadline proximity up to 12,
  * last fitting day 20. Duration only breaks ties; IDs break final ties. */
-export function priorityScore(task:Task,days:string[],appointments:Appointment[],reference?:ReferenceTime):number{
+export function priorityScore(task:Task,days:string[],appointments:Appointment[],reference?:ReferenceTime,budgets:Record<string,number>={}):number{
   const deadline=task.deadline?tehranReferenceTime(new Date(task.deadline)):undefined;
   let score=(task.importance??3)*12+(task.urgency??3)*8+(task.deadlineKind==="hard"?14:0);
   if(deadline){const eligible=days.filter(day=>day<=deadline.day);
     score+=Math.max(0,12-eligible.length*2);
     const piece=task.stages?.find(stage=>!stage.completed)?.duration??remainingDuration(task);
-    const fitting=eligible.filter(day=>{const cap=capacityForDay(appointments,day,undefined,reference?remainingStart(day,reference):undefined);return cap.effectiveCapacity>=piece&&fitSlot(cap.free,piece,[],day===deadline.day?deadline.minute:WORK_END)});
+    const fitting=eligible.filter(day=>{const cap=capacityForDay(appointments,day,budgets[day],reference?remainingStart(day,reference):undefined);return cap.effectiveCapacity>=piece&&fitSlot(cap.free,piece,[],day===deadline.day?deadline.minute:WORK_END)});
     if(fitting.length===1)score+=20;
   }
   return score;
@@ -69,10 +74,11 @@ export function comparePlans(current:PlanItem[],proposed:PlanItem[]):PlanChange[
 
 export function makeDraft(tasks:Task[],days:string[],appointments:Appointment[],budgets:Record<string,number>,revision:number,taskOrder?:Task[],reference?:ReferenceTime,current:PlanItem[]=[]):Draft{
   const open=(taskOrder??tasks).filter(t=>!t.completed&&!t.skipped&&!t.recurrence&&tasks.some(source=>source.id===t.id));
-  if(!taskOrder)open.sort((a,b)=>priorityScore(b,days,appointments,reference)-priorityScore(a,days,appointments,reference)||a.duration-b.duration||a.id.localeCompare(b.id));
+  if(!taskOrder)open.sort((a,b)=>priorityScore(b,days,appointments,reference,budgets)-priorityScore(a,days,appointments,reference,budgets)||a.duration-b.duration||a.id.localeCompare(b.id));
   const items:PlanItem[]=[];const unscheduled:UnscheduledItem[]=[];
   for(const task of open){const deadline=task.deadline?tehranReferenceTime(new Date(task.deadline)):undefined;
     const overdue=!!deadline&&!!reference&&(deadline.day<reference.day||(deadline.day===reference.day&&deadline.minute<reference.minute));
+    const template=tasks.find(source=>source.id===task.recurrenceSourceId);
     const pieces=task.stages?.length?task.stages.filter(stage=>!stage.completed).map(stage=>({stageId:stage.id,duration:stage.duration})): [{stageId:undefined,duration:task.duration}];
     let earliest=days[0];let previousEnd=0;
     for(const piece of pieces){
@@ -80,8 +86,7 @@ export function makeDraft(tasks:Task[],days:string[],appointments:Appointment[],
     const candidates=[...days].filter(day=>day>=earliest).sort((a,b)=>Number(b===old?.day)-Number(a===old?.day)||a.localeCompare(b));
     let placed=false,hadBudget=false;
     for(const day of candidates){if(reference&&day<reference.day)continue;if(task.recurrenceSourceId&&task.targetDay&&task.targetDay>day)continue;
-      const template=tasks.find(source=>source.id===task.recurrenceSourceId);
-      if(template?.recurrence?.sameDay&&day!==task.targetDay)continue;
+      if(template?.recurrence?.sameDay&&day!==task.targetDay&&!(reference&&task.targetDay&&task.targetDay<reference.day))continue;
       const cap=capacityForDay(appointments,day,budgets[day],reference?remainingStart(day,reference):undefined);
       const sameDay=items.filter(item=>item.day===day);
       const used=sameDay.reduce((sum,item)=>sum+planItemDuration(item,tasks),0);
@@ -97,7 +102,7 @@ export function makeDraft(tasks:Task[],days:string[],appointments:Appointment[],
       items.push({taskId:task.id,stageId:piece.stageId,day,start:slot.start,end:slot.end,reason});placed=true;earliest=day;previousEnd=slot.end;break;
     }
     if(!placed){const status:UnscheduledItem["status"]=piece.duration>WORK_END-WORK_START?"split":deadline&&!overdue&&task.deadlineKind==="hard"?"deadline":hadBudget?"no-slot":"waiting";
-      const reason={split:"Split required",deadline:"Deadline conflict","no-slot":"No continuous slot",waiting:"Waiting for capacity"}[status];
+      const reason=template?.recurrence?.sameDay&&task.targetDay&&(!reference||task.targetDay>=reference.day)?(hadBudget?"Required day has no slot":"Required day over capacity"):{split:"Split required",deadline:"Deadline conflict","no-slot":"No continuous slot",waiting:"Waiting for capacity"}[status];
       unscheduled.push({taskId:task.id,status,reason});break;}
     }
   }

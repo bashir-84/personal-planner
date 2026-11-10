@@ -58,6 +58,20 @@ describe("planning upgrades",()=>{
     expect(instances[0].stages?.[0].id).not.toBe(instances[1].stages?.[0].id);
     expect(skipInstance(instances[0]).skipped).toBe(true);expect(instances[1].skipped).toBe(false);
   });
+  it("offers a missed mandatory occurrence for catch-up with a target-day warning",()=>{
+    const template={...base("daily"),recurrence:{frequency:"daily" as const,startDay:day,interval:1,sameDay:true}};
+    const tasks=expandRecurrences([template],day);
+    const draft=makeDraft(tasks,["2026-11-12","2026-11-13"],[],{},0,undefined,{day:"2026-11-12",minute:540});
+    expect(draft.items.find(item=>item.taskId===`daily@${day}`)?.day).toBe("2026-11-12");
+    expect(draft.conflicts.some(conflict=>conflict.type==="target"&&conflict.taskId===`daily@${day}`)).toBe(true);
+  });
+  it("shows a required-day capacity problem instead of silently placing a mandatory occurrence later",()=>{
+    const template={...base("mandatory",120),recurrence:{frequency:"daily" as const,startDay:day,interval:1,sameDay:true}};
+    const tasks=expandRecurrences([template],day);
+    const draft=makeDraft(tasks,[day,"2026-11-11"],[],{[day]:30},0,undefined,{day,minute:540});
+    expect(draft.items.find(item=>item.taskId===`mandatory@${day}`)).toBeUndefined();
+    expect(draft.unscheduled?.find(item=>item.taskId===`mandatory@${day}`)?.reason).toBe("Required day over capacity");
+  });
   it("uses calendar days for relative deadlines across a Gregorian year",()=>{
     expect(dayOffset("2026-12-30",4)).toBe("2027-01-03");
     expect(deadlineDayOffset("2027-01-03T08:30:00Z","2026-12-30")).toBe(4);

@@ -166,6 +166,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSki
 
   return <div className="editorGrid taskEditorGrid">
     {showHint && <p className="editorHint">Changes save automatically.</p>}
+    {task.targetDay&&<p className="editorHint">Occurrence · {new Intl.DateTimeFormat("fa-IR-u-ca-persian",{dateStyle:"medium",timeZone:"Asia/Tehran"}).format(new Date(`${task.targetDay}T12:00:00Z`))}</p>}
     {(task.completionRecords?.length || task.completionHistory?.length || task.completedAt) && <div className="completionHistory"><b>Completion history</b><ul>
       {task.completionRecords?.length ? task.completionRecords.map((record, index) => <li key={`${record.completedAt}-${index}`}>{new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "numeric", timeZone: "Asia/Tehran" }).format(new Date(`${record.day}T12:00:00Z`))} · {new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Tehran" }).format(new Date(record.completedAt))}</li>) : (task.completionHistory?.length ? task.completionHistory : [task.completedAt!]).map((date, index) => <li key={`${date}-${index}`}>{new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Tehran" }).format(new Date(date))}</li>)}
     </ul></div>}
