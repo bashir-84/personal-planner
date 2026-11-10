@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capacityForDay, capacityForReferenceDay, validate } from "./engine";
+import { capacityForDay, capacityForReferenceDay, makeDraft, validate } from "./engine";
 import type { Task } from "./types";
 
 const day = "2026-11-11";
@@ -27,5 +27,10 @@ describe("remaining capacity and hourly deadlines", () => {
   });
   it("caps a manual budget by the physical time remaining", () => {
     expect(capacityForReferenceDay([], day, { day, minute: 23*60 }, 180).effectiveCapacity).toBe(60);
+  });
+  it("checks remaining time when generating a proposal", () => {
+    const openTask = { ...task, deadline: undefined, deadlineKind: "none" as const, duration: 120 };
+    const draft = makeDraft([openTask], [day, "2026-11-12"], [], {}, 0, undefined, { day, minute: 23*60 });
+    expect(draft.items[0].day).toBe("2026-11-12");
   });
 });
