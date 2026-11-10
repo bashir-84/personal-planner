@@ -58,22 +58,60 @@ export function TaskEditDialog({ task, projects, onChange, onToggle, onDelete, o
   onDelete?: () => void;
   onClose: () => void;
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+  const [draft, setDraft] = useState(task);
+  const [pendingCompleted, setPendingCompleted] = useState<boolean | undefined>();
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 760px)");
+    const update = () => setIsMobile(query.matches);
+    update(); query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  const save = () => {
+    onChange({ ...draft });
+    if (pendingCompleted !== undefined) onToggle(pendingCompleted);
+    onClose();
+  };
   return <Modal label="Edit task" onClose={onClose}>
     <section className="draft taskDialog">
       <div className="draftHead"><div><span className="eyebrow">Task</span><h2>Edit task</h2></div>
         <button className="iconButton" aria-label="Close" title="Close" onClick={onClose}><Icon name="close" /></button>
       </div>
-      <TaskEditor task={task} projects={projects} onChange={onChange} onToggle={onToggle} onDelete={onDelete} />
+      <TaskEditor task={isMobile ? draft : task} projects={projects}
+        onChange={patch => isMobile ? setDraft(value => ({ ...value, ...patch })) : onChange(patch)}
+        onToggle={completed => isMobile ? setPendingCompleted(completed) : onToggle(completed)}
+        onDelete={onDelete} showHint={!isMobile} />
+      {isMobile && <div className="taskDialogConfirm"><button className="primary" onClick={save}>Confirm</button></div>}
     </section>
   </Modal>;
 }
 
-export function TaskEditor({ task, projects, onChange, onToggle, onDelete }: {
+export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClose }: {
+  task: Task;
+  projects: PlannerState["projects"];
+  onChange: (patch: Partial<Task>) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  return <Modal label="New task" onClose={onClose}>
+    <section className="draft taskDialog">
+      <div className="draftHead"><div><span className="eyebrow">Task</span><h2>New task</h2></div>
+        <button className="iconButton" aria-label="Close" title="Close" onClick={onClose}><Icon name="close" /></button>
+      </div>
+      <TaskEditor task={task} projects={projects} onChange={onChange} onToggle={() => undefined} showActions={false} showHint={false} />
+      <div className="taskDialogConfirm"><button className="primary" disabled={!task.title.trim()} onClick={onConfirm}>Confirm</button></div>
+    </section>
+  </Modal>;
+}
+
+export function TaskEditor({ task, projects, onChange, onToggle, onDelete, showActions = true, showHint = true }: {
   task: Task;
   projects: PlannerState["projects"];
   onChange: (patch: Partial<Task>) => void;
   onToggle: (completed: boolean) => void;
   onDelete?: () => void;
+  showActions?: boolean;
+  showHint?: boolean;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [jalaliDate, setJalaliDate] = useState(persianDateValue(task.deadline));
@@ -97,7 +135,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete }: {
   };
 
   return <div className="editorGrid taskEditorGrid">
-    <p className="editorHint">Changes save automatically.</p>
+    {showHint && <p className="editorHint">Changes save automatically.</p>}
     {(task.completionRecords?.length || task.completionHistory?.length || task.completedAt) && <div className="completionHistory"><b>Completion history</b><ul>
       {task.completionRecords?.length ? task.completionRecords.map((record, index) => <li key={`${record.completedAt}-${index}`}>{new Intl.DateTimeFormat("fa-IR-u-ca-persian", { day: "numeric", month: "numeric", timeZone: "Asia/Tehran" }).format(new Date(`${record.day}T12:00:00Z`))} · {new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Tehran" }).format(new Date(record.completedAt))}</li>) : (task.completionHistory?.length ? task.completionHistory : [task.completedAt!]).map((date, index) => <li key={`${date}-${index}`}>{new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Tehran" }).format(new Date(date))}</li>)}
     </ul></div>}
@@ -123,7 +161,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete }: {
     </div></fieldset>
     <RatingField label="Importance" value={task.importance} onChange={value => onChange({ importance: value })} />
     <RatingField label="Urgency" value={task.urgency} onChange={value => onChange({ urgency: value })} />
-    <div className="taskEditorActions">
+    {showActions && <div className="taskEditorActions">
       <button className="dangerButton" onClick={() => onToggle(!task.completed)}><Icon name={task.completed ? "check" : "check"} />{task.completed ? "Reopen task" : "Move to completed"}</button>
       {onDelete && <button className={`taskDeleteButton ${confirmDelete ? "isConfirming" : ""}`} onClick={() => {
         if (!confirmDelete) setConfirmDelete(true);
@@ -131,7 +169,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete }: {
       }} aria-label={confirmDelete ? "Confirm delete task" : "Delete task"} title={confirmDelete ? "Tap again to confirm deletion" : "Delete task"}>
         <Icon name="trash" /><span>{confirmDelete ? "Confirm delete?" : "Delete"}</span>
       </button>}
-    </div>
+    </div>}
   </div>;
 }
 
