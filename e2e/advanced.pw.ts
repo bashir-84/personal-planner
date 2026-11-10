@@ -50,3 +50,17 @@ test("daily recurrence creates editable instances without duplicating them on re
   await page.reload();
   await expect.poll(instanceCount).toBe(7);
 });
+
+test("completed history in a test scenario stays separate from personal history",async({page})=>{
+  await page.goto("test/");
+  const row=page.locator(".openTasksCard .taskListRow").first();
+  const title=(await row.locator(".taskTitle").innerText()).trim();
+  await row.getByRole("checkbox").click();
+  await page.getByRole("button",{name:"Open menu"}).click();
+  await page.getByRole("link",{name:"Completed Tasks"}).click();
+  await expect(page.locator(".completedItem").filter({hasText:title})).toBeVisible();
+  await page.goto("./");
+  await page.getByRole("button",{name:"Open menu"}).click();
+  await page.getByRole("link",{name:"Completed Tasks"}).click();
+  await expect(page.locator(".completedItem")).toHaveCount(0);
+});
