@@ -1,4 +1,5 @@
 import { Appointment, Conflict, Draft, PlanItem, Task } from "./types";
+import { remainingStart, tehranReferenceTime, type ReferenceTime } from "./referenceTime";
 
 export const WORK_START=9*60, WORK_END=24*60, DEFAULT_RATIO=2/3;
 export type Interval={start:number;end:number};
@@ -19,9 +20,9 @@ export function capacityForDay(appointments:Appointment[],day:string,manual?:num
 function fit(intervals:Interval[],duration:number,used:Interval[]):Interval|undefined{
   const occupied=mergeIntervals(used); for(const base of intervals){let cursor=base.start; for(const b of occupied){if(b.end<=cursor||b.start>=base.end)continue;if(b.start-cursor>=duration)return{start:cursor,end:cursor+duration};cursor=Math.max(cursor,b.end);}if(base.end-cursor>=duration)return{start:cursor,end:cursor+duration};}
 }
-export function validate(items:PlanItem[],tasks:Task[],appointments:Appointment[],budgets:Record<string,number>):Conflict[]{
+export function validate(items:PlanItem[],tasks:Task[],appointments:Appointment[],budgets:Record<string,number>,reference?:ReferenceTime):Conflict[]{
   const conflicts:Conflict[]=[]; const days=[...new Set(items.map(i=>i.day))];
-  for(const day of days){const dayItems=items.filter(i=>i.day===day);const total=dayItems.reduce((n,i)=>n+(tasks.find(t=>t.id===i.taskId)?.duration??0),0);const cap=capacityForDay(appointments,day,budgets[day]);if(total>cap.effectiveCapacity)conflicts.push({type:"capacity",day,minutes:total-cap.effectiveCapacity,message:`${total-cap.effectiveCapacity} دقیقه کسری ظرفیت`});const used:Interval[]=[];for(const item of dayItems){const task=tasks.find(t=>t.id===item.taskId);if(!task)continue;const slot=fit(cap.free,task.duration,used);if(!slot)conflicts.push({type:"continuity",day,taskId:task.id,message:`«${task.title}» بازهٔ پیوسته ندارد`});else used.push(slot);if(task.deadline&&new Date(`${day}T23:59:59+03:30`)>new Date(task.deadline))conflicts.push({type:"deadline",day,taskId:task.id,message:`«${task.title}» از موعد عبور می‌کند`});}}
+  for(const day of days){const dayItems=items.filter(i=>i.day===day&& !tasks.find(t=>t.id===i.taskId)?.completed);const total=dayItems.reduce((n,i)=>n+(tasks.find(t=>t.id===i.taskId)?.duration??0),0);const cap=capacityForDay(appointments,day,budgets[day],reference?remainingStart(day,reference):undefined);if(total>cap.effectiveCapacity)conflicts.push({type:"capacity",day,minutes:total-cap.effectiveCapacity,message:`${total-cap.effectiveCapacity} دقیقه کسری ظرفیت`});const used:Interval[]=[];for(const item of dayItems){const task=tasks.find(t=>t.id===item.taskId);if(!task)continue;const slot=fit(cap.free,task.duration,used);if(!slot)conflicts.push({type:"continuity",day,taskId:task.id,message:`«${task.title}» بازهٔ پیوسته ندارد`});else used.push(slot);if(task.deadline){const deadline=tehranReferenceTime(new Date(task.deadline));if(day>deadline.day||(day===deadline.day&&(!slot||slot.end>deadline.minute)))conflicts.push({type:"deadline",day,taskId:task.id,message:`«${task.title}» از موعد عبور می‌کند`});}}}
   return conflicts;
 }
 export function makeDraft(tasks:Task[],days:string[],appointments:Appointment[],budgets:Record<string,number>,revision:number,taskOrder?:Task[]):Draft{
