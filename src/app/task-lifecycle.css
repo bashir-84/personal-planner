@@ -1,0 +1,23 @@
+body{background:#f2f5f3}
+.grid{align-items:start}
+.stack{gap:12px}
+.card{border-color:#d8dfda;border-radius:14px;background:#fff;box-shadow:0 2px 10px #19352708}
+.cardHead h2{letter-spacing:.01em}
+.taskListRow{--project:#8a968f;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;margin:6px 0;padding:10px 10px 10px 8px;border:1px solid color-mix(in srgb,var(--project) 20%,#dfe5e1);border-inline-start:5px solid var(--project);border-radius:10px;background:color-mix(in srgb,var(--project) 5%,white)}
+.confirmedRow{background:color-mix(in srgb,var(--project) 13%,white);border-color:color-mix(in srgb,var(--project) 32%,#dfe5e1)}
+.taskListRow label{display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer}
+.taskListRow input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:var(--project)}
+.taskTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+.taskSignals{display:flex;align-items:center;gap:5px;direction:ltr;font-size:10px;color:#536159}
+.taskSignals i{min-width:24px;padding:3px 5px;border-radius:6px;background:#edf1ee;text-align:center;font-style:normal;font-weight:700}
+.taskSignals b{font-weight:500;white-space:nowrap}
+.taskSignals em{display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#fde0dc;color:#a33d32;font-style:normal;font-weight:800}
+.taskListRow.isCompleted{filter:grayscale(1);opacity:.55;background:#f4f5f4;border-color:#cfd4d1}
+.taskListRow.isCompleted .taskTitle{text-decoration:line-through;text-decoration-thickness:1px}
+.completedDivider{display:flex;justify-content:space-between;align-items:center;margin:15px 0 5px;padding-top:10px;border-top:1px dashed #cbd3ce;color:#78847d;font-size:11px}
+.completedDivider b{display:grid;place-items:center;min-width:20px;height:20px;border-radius:99px;background:#e5e9e6;font-size:10px}
+.taskEditor.isCompleted{filter:grayscale(1);opacity:.58;order:99}
+.undoToast{position:fixed;right:50%;bottom:20px;z-index:30;transform:translateX(50%);display:flex;align-items:center;gap:18px;width:min(440px,calc(100% - 28px));padding:11px 12px;border-radius:12px;background:#17211c;color:white;box-shadow:0 12px 35px #17211c45;font-size:12px}
+.undoToast span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.undoToast button{border-color:#ffffff55;background:#ffffff16;color:white;padding:7px 10px}
+@media(max-width:600px){.taskListRow{grid-template-columns:1fr}.taskSignals{padding-inline-start:25px}.undoToast{bottom:12px}}
