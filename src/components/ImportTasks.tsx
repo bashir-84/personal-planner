@@ -21,7 +21,8 @@ export function ImportTasks() {
 
   const allWarnings = preview?.rows.flatMap(row => row.warnings.map(w => "#" + row.index + ": " + w)) ?? [];
   const warningsPresent = allWarnings.length > 0 || Boolean(preview?.warnings.length);
-  const canApply = Boolean(preview && !preview.errors.length && preview.validCount > 0 && (!warningsPresent || acceptWarnings));
+  const invalidEdits = preview?.rows.some(row => row.task && edits[row.sourceKey] && (!((edits[row.sourceKey].title ?? row.task.title).trim()) || !Number.isInteger(edits[row.sourceKey].duration ?? row.task.duration) || (edits[row.sourceKey].duration ?? row.task.duration) < 1)) ?? false;
+  const canApply = Boolean(preview && !preview.errors.length && preview.validCount > 0 && !invalidEdits && (!warningsPresent || acceptWarnings));
   const panel: React.CSSProperties = {
     background: "#fff", border: "1px solid #e7e9ea", borderRadius: 16, padding: 20
   };
@@ -139,6 +140,7 @@ export function ImportTasks() {
           <p style={{ margin: 0 }}>
             {preview.validCount} new · {preview.duplicateCount} duplicates · {preview.rows.filter(r => r.status === "invalid").length} invalid
           </p>
+          {invalidEdits && <p role="alert" style={{ color: "#ad2929" }}>Every task needs a title and a positive duration. Please correct your edits.</p>}
           {preview.errors.length > 0 && (
             <div role="alert" style={{ color: "#ad2929" }}>
               {preview.errors.map((err, i) => <p key={i}>{err}</p>)}
