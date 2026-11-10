@@ -7,7 +7,7 @@ import sample from "../../data/planner-test-data.json";
 import {clearState,emptyState} from "@/storage/local";
 
 const dataset=sample as TestDataset;
-const testKey=(id:string)=>`personal-planner-test-v1:${id}`;
+const testKey=(id:string)=>`personal-planner-test-v2:${id}`;
 function scenarioState(id:string):PlannerState{
   const scenario=dataset.scenarios.find(item=>item.id===id)??dataset.scenarios[0];
   return {...emptyState,projects:structuredClone(dataset.projects),tasks:structuredClone(dataset.tasks),appointments:structuredClone(scenario.appointments),confirmed:structuredClone(scenario.confirmed),manualBudgets:structuredClone(scenario.manualBudgets)};
