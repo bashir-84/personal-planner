@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "referenceDate": "2026-11-10",
+  "referenceTime": "09:00",
+  "timeZone": "Asia/Tehran",
+  "projects": [
+    {
+      "id": "nogol",
+      "name": "نوگل",
+      "color": "#F97316"
+    },
+    {
+      "id": "monadi",
+      "name": "مونادی",
+      "color": "#EAB308"
+    },
+    {
+      "id": "rahbar",
+      "name": "راهبر",
+      "color": "#0F766E"
+    },
+    {
+      "id": "deyhim",
+      "name": "دهیم",
+      "color": "#16325A"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "nogol-bot",
+      "title": "بات نوگل",
+      "projectId": "nogol",
+      "duration": 120,
+      "estimateSource": "manual",
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "nogol-drive",
+      "title": "لیست کارهای گوگل درایو",
+      "projectId": "nogol",
+      "duration": 180,
+      "estimateSource": "manual",
+      "importance": 3,
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "nogol-video",
+      "title": "موزیک ویدیو",
+      "projectId": "nogol",
+      "duration": 90,
+      "estimateSource": "manual",
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "nogol-landing",
+      "title": "لندینگ پیج نوگل",
+      "projectId": "nogol",
+      "duration": 120,
+      "estimateSource": "manual",
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "nogol-contract",
+      "title": "تمدید قرارداد جدید",
+      "projectId": "nogol",
+      "duration": 60,
+      "estimateSource": "manual",
+      "importance": 2,
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "monadi-e6",
+      "title": "ویدیو E6",
+      "projectId": "monadi",
+      "duration": 240,
+      "estimateSource": "manual",
+      "deadline": "2026-11-13T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "monadi-accounting",
+      "title": "حساب‌وکتاب جدید",
+      "projectId": "monadi",
+      "duration": 30,
+      "estimateSource": "manual",
+      "urgency": 5,
+      "deadlineKind": "none",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "rahbar-da13",
+      "title": "DA13",
+      "projectId": "rahbar",
+      "duration": 120,
+      "estimateSource": "manual",
+      "deadline": "2026-11-12T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "rahbar-dr15",
+      "title": "DR15",
+      "projectId": "rahbar",
+      "duration": 180,
+      "estimateSource": "manual",
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "deyhim-translations",
+      "title": "ترجمه‌های ویدیوهای دوره کوچینگ",
+      "projectId": "deyhim",
+      "duration": 180,
+      "estimateSource": "manual",
+      "deadline": "2026-11-15T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "deyhim-week7",
+      "title": "ساخت سؤال‌های هفتهٔ هفتم",
+      "projectId": "deyhim",
+      "duration": 90,
+      "estimateSource": "manual",
+      "deadline": "2026-11-12T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    },
+    {
+      "id": "deyhim-instagram",
+      "title": "پست‌های اینستاگرام",
+      "projectId": "deyhim",
+      "duration": 60,
+      "estimateSource": "manual",
+      "deadline": "2026-11-14T23:59:59+03:30",
+      "deadlineKind": "hard",
+      "completed": false,
+      "createdAt": "2026-11-10T09:00:00+03:30"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "baseline",
+      "title": "نمونهٔ عادی",
+      "appointments": [
+        {
+          "id": "calendar-chand-pareh",
+          "title": "چند پاره",
+          "day": "2026-11-07",
+          "start": 1110,
+          "end": 1230,
+          "blocking": true
+        },
+        {
+          "id": "calendar-ehsan",
+          "title": "احسان",
+          "day": "2026-11-08",
+          "start": 720,
+          "end": 780,
+          "blocking": true
+        },
+        {
+          "id": "calendar-raha-site",
+          "title": "سایت رها",
+          "day": "2026-11-08",
+          "start": 960,
+          "end": 1080,
+          "blocking": true
+        },
+        {
+          "id": "calendar-roshana-monday",
+          "title": "کلاس با روشانا",
+          "day": "2026-11-09",
+          "start": 960,
+          "end": 1050,
+          "blocking": true
+        },
+        {
+          "id": "calendar-behrad",
+          "title": "بهراد",
+          "day": "2026-11-09",
+          "start": 1110,
+          "end": 1230,
+          "blocking": true
+        },
+        {
+          "id": "calendar-ghabelameh-party",
+          "title": "قابلمه پارتی",
+          "day": "2026-11-10",
+          "start": 1200,
+          "end": 1260,
+          "blocking": true
+        },
+        {
+          "id": "calendar-music-class",
+          "title": "کلاس موسیقی",
+          "day": "2026-11-11",
+          "start": 960,
+          "end": 1020,
+          "blocking": true
+        },
+        {
+          "id": "calendar-roshana-thursday",
+          "title": "کلاس روشانا",
+          "day": "2026-11-12",
+          "start": 1080,
+          "end": 1170,
+          "blocking": true
+        }
+      ],
+      "manualBudgets": {},
+      "confirmed": [],
+      "expected": "۱۲ کار در ۴ پروژه، مجموع ۱۴۷۰ دقیقه. تقویم هفته ۸ قرار اشغال‌کننده به مجموع ۷۲۰ دقیقه دارد. قرارهای هر روز از زمان آزاد همان روز کم می‌شوند. پیش از تأیید پیشنهاد، برنامهٔ جاری خالی است."
+    },
+    {
+      "id": "over-capacity",
+      "title": "عبور از ظرفیت",
+      "appointments": [],
+      "manualBudgets": {
+        "2026-11-10": 120
+      },
+      "confirmed": [
+        {
+          "taskId": "rahbar-da13",
+          "day": "2026-11-10"
+        },
+        {
+          "taskId": "nogol-video",
+          "day": "2026-11-10"
+        }
+      ],
+      "expected": "۲۱۰ دقیقه بار، ۱۲۰ دقیقه ظرفیت مؤثر، نوار قرمز و هشدار ۹۰ دقیقه کسری."
+    },
+    {
+      "id": "fragmented-day",
+      "title": "ظرفیت کافی بدون بازهٔ پیوسته",
+      "appointments": [
+        {
+          "id": "gap-1",
+          "title": "قرار نمونه",
+          "day": "2026-11-10",
+          "start": 600,
+          "end": 660,
+          "blocking": true
+        },
+        {
+          "id": "gap-2",
+          "title": "قرار نمونه",
+          "day": "2026-11-10",
+          "start": 720,
+          "end": 780,
+          "blocking": true
+        },
+        {
+          "id": "gap-3",
+          "title": "قرار نمونه",
+          "day": "2026-11-10",
+          "start": 840,
+          "end": 1440,
+          "blocking": true
+        }
+      ],
+      "manualBudgets": {
+        "2026-11-10": 120
+      },
+      "confirmed": [
+        {
+          "taskId": "rahbar-da13",
+          "day": "2026-11-10"
+        }
+      ],
+      "expected": "۳ فاصلهٔ یک‌ساعته، ۱۲۰ دقیقه ظرفیت مؤثر و ۱۲۰ دقیقه بار. کار دوساعته بازهٔ پیوسته ندارد."
+    },
+    {
+      "id": "zero-capacity",
+      "title": "روز بدون ظرفیت",
+      "appointments": [
+        {
+          "id": "full-day",
+          "title": "قرار نمونه",
+          "day": "2026-11-10",
+          "start": 540,
+          "end": 1440,
+          "blocking": true
+        }
+      ],
+      "manualBudgets": {},
+      "confirmed": [
+        {
+          "taskId": "monadi-accounting",
+          "day": "2026-11-10"
+        }
+      ],
+      "expected": "۳۰ دقیقه بار و صفر دقیقه ظرفیت. نوار قرمز و هشدار ۳۰ دقیقه کسری، بدون NaN یا Infinity."
+    }
+  ]
+}

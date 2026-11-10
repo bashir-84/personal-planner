@@ -7,3 +7,5 @@ export type PlanItem = { taskId:string; day:string; start?:number; end?:number; 
 export type Draft = { id:string; baseRevision:number; createdAt:string; items:PlanItem[]; conflicts:Conflict[] };
 export type Conflict = { type:"capacity"|"continuity"|"deadline"|"changed"; day?:string; taskId?:string; minutes?:number; message:string };
 export type PlannerState = { revision:number; projects:Project[]; tasks:Task[]; notes:Note[]; appointments:Appointment[]; confirmed:PlanItem[]; draft?:Draft; manualBudgets:Record<string,number> };
+export type TestScenario = { id:string; title:string; appointments:Appointment[]; manualBudgets:Record<string,number>; confirmed:PlanItem[]; expected:string };
+export type TestDataset = { schemaVersion:number; referenceDate:string; referenceTime:string; timeZone:string; projects:Project[]; tasks:Task[]; scenarios:TestScenario[] };
