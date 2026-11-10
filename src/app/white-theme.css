@@ -244,3 +244,13 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .backgroundActions{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
 .backgroundActions .primary{min-width:120px}.backgroundClear{color:var(--red);border-color:#e8c2c8}
 @media(max-width:600px){.backgroundInputs{grid-template-columns:1fr;gap:10px}.backgroundPreview{min-height:150px}.backgroundActions .primary{min-width:100px}.backgroundDialog{padding:16px}}
+
+/* Contrast changes apply only to controls painted directly over the photo. */
+.hasBackground{--on-photo:#20242c;--photo-text-shadow:0 1px 2px #ffffff70}
+.hasBackground.darkBackground{--on-photo:#fff;--photo-text-shadow:0 1px 3px #0009}
+.hasBackground .datePicker>summary,.hasBackground .datePrevious,.hasBackground .dateNext,.hasBackground .capacityEditor>summary,.hasBackground .capacityEditor>summary .capacityModeLabel,.hasBackground .utility>summary,.hasBackground .plannerFooter>a{color:var(--on-photo)!important;text-shadow:var(--photo-text-shadow)}
+.hasBackground .dateStrip button:not([aria-pressed=true]):not([data-today=true]),.hasBackground .dateStrip button:not([aria-pressed=true]):not([data-today=true]) small,.hasBackground .dateStrip button:not([aria-pressed=true]):not([data-today=true]) bdi{color:var(--on-photo);text-shadow:var(--photo-text-shadow)}
+.hasBackground .utility>summary .icon,.hasBackground .dateNavigation>.iconButton .icon,.hasBackground .capacityEditor>summary .icon{filter:drop-shadow(0 1px 1px #0003)}
+.card,.workload,.testToolbar{box-shadow:0 2px 8px #15223b0b,0 1px 2px #15223b08}
+.hasBackground .card,.hasBackground .workload,.hasBackground .testToolbar{box-shadow:0 3px 12px #0000001c,0 1px 3px #00000012}
+.cardHead h2,.workload h2{ text-shadow:0 1px 1px #15223b08 }
