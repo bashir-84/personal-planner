@@ -68,6 +68,9 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .taskDetailMeta span{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
 .taskDetailMeta b{color:var(--ink);font-weight:600}
 .calendarControls{display:flex;align-items:center;gap:10px;margin:-4px 0 14px}
+.weekNav{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;min-height:34px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted)}
+.weekNav:hover{background:#f1f4f9;color:var(--blue)}
+.weekNav .icon{width:18px;height:18px}
 .dateStrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;flex:1;direction:rtl}
 .dateStrip button{display:grid;justify-items:center;gap:1px;min-width:0;min-height:44px;padding:3px 2px;border-color:transparent;background:transparent;color:var(--muted);line-height:1.2}
 .dateStrip button small{font-size:10px;white-space:nowrap}
@@ -298,4 +301,5 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
  .minimalHeader .planButton{top:auto;bottom:0;right:0;transform:none}
  .minimalHeader .menuButton{left:0;right:auto}
  .minimalHeader .mobileTodayJump{grid-column:2;grid-row:2;justify-self:center;align-self:center}
+ .calendarControls .weekNav{display:none}
 }
