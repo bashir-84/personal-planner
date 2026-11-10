@@ -17,6 +17,10 @@ export function freeIntervals(appointments:Appointment[], day:string, nowMinute?
 export function capacityForDay(appointments:Appointment[],day:string,manual?:number,nowMinute?:number):Capacity{
   const free=freeIntervals(appointments,day,nowMinute); const freeMinutes=free.reduce((n,x)=>n+x.end-x.start,0); const workBudget=manual??Math.floor(freeMinutes*DEFAULT_RATIO); return {freeMinutes,workBudget,effectiveCapacity:Math.min(freeMinutes,workBudget),free};
 }
+/** Capacity remaining on a Tehran calendar day relative to an explicit clock. */
+export function capacityForReferenceDay(appointments:Appointment[],day:string,reference:ReferenceTime,manual?:number):Capacity{
+  return capacityForDay(appointments,day,manual,remainingStart(day,reference));
+}
 function fit(intervals:Interval[],duration:number,used:Interval[]):Interval|undefined{
   const occupied=mergeIntervals(used); for(const base of intervals){let cursor=base.start; for(const b of occupied){if(b.end<=cursor||b.start>=base.end)continue;if(b.start-cursor>=duration)return{start:cursor,end:cursor+duration};cursor=Math.max(cursor,b.end);}if(base.end-cursor>=duration)return{start:cursor,end:cursor+duration};}
 }

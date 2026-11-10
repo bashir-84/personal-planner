@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { capacityForDay, validate } from "./engine";
+import { capacityForDay, capacityForReferenceDay, validate } from "./engine";
 import type { Task } from "./types";
 
 const day = "2026-11-11";
@@ -17,5 +17,15 @@ describe("remaining capacity and hourly deadlines", () => {
   });
   it("gives past days no remaining opportunity when a reference is supplied", () => {
     expect(validate([{ taskId: task.id, day }], [task], [], {}, { day: "2026-11-12", minute: 600 }).some(c => c.type === "capacity")).toBe(true);
+  });
+  it("clips an ongoing appointment and merges overlapping appointments", () => {
+    const appointments = [
+      { id: "a", title: "", day, start: 17*60, end: 19*60, blocking: true },
+      { id: "b", title: "", day, start: 18*60+30, end: 20*60, blocking: true }
+    ];
+    expect(capacityForReferenceDay(appointments, day, { day, minute: 18*60 })).toMatchObject({ freeMinutes: 240, effectiveCapacity: 160 });
+  });
+  it("caps a manual budget by the physical time remaining", () => {
+    expect(capacityForReferenceDay([], day, { day, minute: 23*60 }, 180).effectiveCapacity).toBe(60);
   });
 });
