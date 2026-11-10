@@ -219,6 +219,24 @@ export function prepareImport(input: string, current: PlannerState): ImportPrevi
     if (row.confirmed) row.confirmed.taskId = imported.id;
     result.validCount++;
   });
+  // Preview the impact of imported confirmed entries before any write occurs.
+  const pending = result.rows.filter(r => r.status === "ready" && r.task);
+  const upcoming = pending.flatMap(r => r.confirmed ? [r.confirmed] : []);
+  if (upcoming.length) {
+    const planned = [...current.confirmed, ...upcoming];
+    const tasks = [...current.tasks, ...pending.map(r => r.task!)];
+    const issues = validate(planned, tasks, current.appointments, current.manualBudgets);
+    const newTaskIds = new Set(pending.map(r => r.task!.id));
+    const days = new Set(upcoming.map(i => i.day));
+    const affected = issues.filter(c => c.taskId ? newTaskIds.has(c.taskId) : Boolean(c.day && days.has(c.day)));
+    for (const issue of affected) {
+      for (const row of pending) {
+        if (row.confirmed && (issue.taskId === row.task?.id || (!issue.taskId && issue.day === row.confirmed.day))) {
+          row.warnings.push("Scheduling conflict (" + issue.type + "): " + issue.message);
+        }
+      }
+    }
+  }
   if (result.rows.some(r => r.errors.length)) result.errors.push("Fix invalid rows before importing; no partial writes will occur.");
   return result;
 }
