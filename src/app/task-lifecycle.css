@@ -7,7 +7,7 @@ body{background:#f2f5f3}
 .confirmedRow{background:color-mix(in srgb,var(--project) 13%,white);border-color:color-mix(in srgb,var(--project) 32%,#dfe5e1)}
 .taskListRow label{display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer}
 .taskListRow input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:var(--project)}
-.taskTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}
+.taskTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650;border:0;background:transparent;padding:0;color:inherit;text-align:right;cursor:pointer}
 .taskSignals{display:flex;align-items:center;gap:5px;direction:ltr;font-size:10px;color:#536159}
 .taskSignals i{min-width:24px;padding:3px 5px;border-radius:6px;background:#edf1ee;text-align:center;font-style:normal;font-weight:700}
 .taskSignals b{font-weight:500;white-space:nowrap}
@@ -20,4 +20,5 @@ body{background:#f2f5f3}
 .undoToast{position:fixed;right:50%;bottom:20px;z-index:30;transform:translateX(50%);display:flex;align-items:center;gap:18px;width:min(440px,calc(100% - 28px));padding:11px 12px;border-radius:12px;background:#17211c;color:white;box-shadow:0 12px 35px #17211c45;font-size:12px}
 .undoToast span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .undoToast button{border-color:#ffffff55;background:#ffffff16;color:white;padding:7px 10px}
+.taskDialog{width:min(620px,100%)}.taskDialog .editorGrid{margin-top:6px}.taskDialog .dangerButton{grid-column:1/-1;padding:10px}
 @media(max-width:600px){.taskListRow{grid-template-columns:1fr}.taskSignals{padding-inline-start:25px}.undoToast{bottom:12px}}
