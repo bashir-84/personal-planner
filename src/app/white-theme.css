@@ -67,6 +67,36 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .taskDetailMeta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .taskDetailMeta span{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
 .taskDetailMeta b{color:var(--ink);font-weight:600}
+.calendarControls{display:flex;align-items:center;gap:10px;margin:-4px 0 14px}
+.dateStrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;flex:1;direction:rtl}
+.dateStrip button{display:grid;justify-items:center;gap:1px;min-width:0;min-height:44px;padding:3px 2px;border-color:transparent;background:transparent;color:var(--muted);line-height:1.2}
+.dateStrip button small{font-size:10px;white-space:nowrap}
+.dateStrip button bdi{font-size:12px;font-weight:600;white-space:nowrap;direction:ltr}
+.dateStrip button[aria-pressed=true]{border-color:#cbd5f0;background:#edf1ff;color:#2447b7}
+.dashboardViewSwitch{display:flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:9px;background:#f5f6f8}
+.dashboardViewSwitch button{display:grid;place-items:center;width:34px;min-width:34px;min-height:34px;padding:0;border:0;background:transparent;color:var(--muted)}
+.dashboardViewSwitch button[aria-pressed=true]{background:#fff;color:#2447b7;box-shadow:0 1px 3px #20263218}
+.dashboardViewSwitch .icon{width:16px;height:16px}
+.taskCollection.isCollapsed{mask-image:linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%)}
+.showMoreTasks{display:block;width:100%;min-height:36px;margin-top:8px;padding:6px 10px;border:1px dashed #cbd2dd;background:#fafbfc;color:#586477;font-size:12px}
+.showMoreTasks:hover{background:#f0f3f8;color:#2447b7}
+.confirmedWeek{display:grid;width:100%;min-width:0;grid-template-columns:repeat(7,minmax(128px,1fr));gap:7px;direction:rtl;overflow-x:auto;padding-bottom:4px;overscroll-behavior-inline:contain}
+.confirmedWeekDay{display:flex;flex-direction:column;min-width:0;min-height:230px;border:1px solid var(--line);border-radius:8px;background:#fafbfc;overflow:hidden}
+.confirmedWeekHeading{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0;padding:8px;border:0;border-radius:0;border-bottom:1px solid var(--line);background:#f5f6f8;text-align:right}
+.confirmedWeekHeading span{display:flex;align-items:center;gap:5px;min-width:0}
+.confirmedWeekHeading b{font-size:12px;white-space:nowrap}
+.confirmedWeekHeading small,.confirmedWeekHeading em{font-size:10px;color:var(--muted);font-style:normal;white-space:nowrap}
+.confirmedWeekTasks{display:grid;align-content:start;gap:5px;padding:6px;min-height:150px}
+.confirmedWeekTask{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:4px;min-width:0;padding:5px;border:1px solid #e3e6ec;border-inline-start:3px solid var(--project);border-radius:6px;background:#fff}
+.confirmedWeekTask label{display:grid;place-items:center}
+.confirmedWeekTask input{width:16px;height:16px;min-height:0;margin:0;accent-color:#2447b7}
+.confirmedWeekTask button{min-width:0;min-height:28px;padding:2px;border:0;border-radius:2px;background:transparent;text-align:right;font-size:11px;line-height:1.35;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.confirmedWeekTask button:hover{background:transparent;color:#2447b7}
+.confirmedWeekTask>b{font-size:10px;color:var(--muted);direction:ltr;white-space:nowrap}
+.confirmedWeekTask.isCompleted{filter:grayscale(1);opacity:.62}
+.taskTitle,.draftTaskTitle{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.35}
+.draftTaskTitle{min-height:0;padding:2px 0;text-align:right}
+.weekTaskTitle{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.35}
 .completionHistory{grid-column:1/-1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
 .completionHistory ul{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
 .completionHistory li{padding:4px 8px;border-radius:6px;background:#f2f4f7;color:var(--ink)}
@@ -82,3 +112,4 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .weekEmpty{display:grid;place-items:center;min-height:60px;color:#a4aab5}
 @media(max-width:760px){.plannerDialog:has(.planDraft){width:calc(100% - 12px)}.weekPlan{display:flex;direction:rtl;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}.weekDay{flex:0 0 168px;scroll-snap-align:start}.weekDayTasks{min-height:150px}.planViewSwitch{margin-bottom:10px}}
 .planningDays>div{direction:rtl}
+@media(max-width:760px){.calendarControls{flex-direction:column;align-items:stretch;gap:6px}.dateStrip{gap:2px}.dateStrip button{min-height:40px}.dateStrip button small{font-size:9px}.dateStrip button bdi{font-size:11px}.dashboardViewSwitch{align-self:center}.confirmedWeek{grid-template-columns:repeat(7,minmax(150px,1fr));margin-inline:-4px}.confirmedWeekDay{min-height:210px}.taskListRow{align-items:center}.taskTitle{flex-basis:0;min-height:38px;font-size:13px}.taskSignals{max-width:48%;flex-wrap:wrap;white-space:normal}.taskSignals b,.taskSignals i{flex:none}.taskCollection.isCollapsed{-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 80%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 80%,transparent 100%)}}
