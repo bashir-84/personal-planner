@@ -113,7 +113,8 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .dateStrip button[data-today=true]{border-color:#2447b7;background:#2447b7;color:#fff;box-shadow:0 2px 5px #2447b733}
 .dateStrip button[data-today=true] small{color:#e8edff}
 .dateStrip button[data-today=true] bdi{color:#fff}
-@media(max-width:760px){.grid,.grid.listMode{grid-template-columns:minmax(0,1fr);grid-template-areas:"newtask" "confirmed" "open" "workload" "calendar" "projects" "notes";gap:9px}.grid.weekMode{grid-template-columns:minmax(0,1fr);grid-template-areas:"newtask" "weekly" "open" "workload" "calendar" "projects" "notes";gap:9px}.grid>.stack{display:contents}.grid>.workload{margin:0}.grid .topNewTask,.grid .confirmedCard,.grid .weeklyPlanCard,.grid .openTasksCard,.grid .calendarCard,.grid .utilityProjects,.grid .utilityNotes{grid-area:auto}.grid .topNewTask{grid-area:newtask}.grid .confirmedCard{grid-area:confirmed}.grid .weeklyPlanCard{grid-area:weekly}.grid .openTasksCard{grid-area:open}.grid .calendarCard{grid-area:calendar}.grid .utilityProjects{grid-area:projects}.grid .utilityNotes{grid-area:notes}}
+.mobileEventList{display:none}
+@media(max-width:760px){.grid,.grid.listMode{grid-template-columns:minmax(0,1fr);grid-template-areas:"workload" "newtask" "confirmed" "open" "calendar" "projects" "notes";gap:9px}.grid.weekMode{grid-template-columns:minmax(0,1fr);grid-template-areas:"workload" "newtask" "weekly" "open" "calendar" "projects" "notes";gap:9px}.grid>.stack{display:contents}.grid>.workload{margin:0}.grid .topNewTask,.grid .confirmedCard,.grid .weeklyPlanCard,.grid .openTasksCard,.grid .calendarCard,.grid .utilityProjects,.grid .utilityNotes{grid-area:auto}.grid .topNewTask{grid-area:newtask}.grid .confirmedCard{grid-area:confirmed}.grid .weeklyPlanCard{grid-area:weekly}.grid .openTasksCard{grid-area:open}.grid .calendarCard{grid-area:calendar}.grid .utilityProjects{grid-area:projects}.grid .utilityNotes{grid-area:notes}}
 .completionHistory{grid-column:1/-1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
 .completionHistory ul{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
 .completionHistory li{padding:4px 8px;border-radius:6px;background:#f2f4f7;color:var(--ink)}
@@ -132,3 +133,60 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 @media(max-width:760px){.calendarControls{flex-direction:column;align-items:stretch;gap:6px}.dateStrip{gap:2px}.dateStrip button{min-height:40px}.dateStrip button small{font-size:9px}.dateStrip button bdi{font-size:11px}.dashboardViewSwitch{align-self:center}.confirmedWeek{grid-template-columns:repeat(7,minmax(150px,1fr));margin-inline:-4px}.confirmedWeekDay{min-height:210px}.taskListRow{align-items:center}.taskTitle{flex-basis:0;min-height:38px;font-size:13px}.taskSignals{max-width:48%;flex-wrap:wrap;white-space:normal}.taskSignals b,.taskSignals i{flex:none}.taskCollection.isCollapsed{-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 80%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 80%,transparent 100%)}}
 
 @media(max-width:760px){.calendarControls{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;margin:-3px 0 8px}.dateStrip{display:none}.dashboardViewSwitch{align-self:auto}.todayJump{min-height:34px;padding:4px 11px}.grid>.workload{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:7px 10px;margin:0;border:1px solid var(--line);border-radius:9px}.grid>.workload>div:first-child{display:flex;align-items:baseline;gap:7px;margin:0}.grid>.workload .eyebrow{font-size:10px;letter-spacing:0}.grid>.workload h2{margin:0;font-size:14px;line-height:1.2}.grid>.workload h2 small{font-size:11px}.grid>.workload .progress{flex:1;min-width:56px;height:4px;margin:0}.grid>.workload .loadWarning{margin:0;font-size:10px;line-height:1.2}.grid>.workload .loadWarning .icon{width:12px;height:12px}.grid>.workload .loadWarning.full{display:none}.grid .topNewTask,.grid .confirmedCard,.grid .weeklyPlanCard,.grid .openTasksCard,.grid .calendarCard{padding:11px}.grid .cardHead{margin-bottom:7px}.grid .timeline{height:340px}.grid .stack{gap:9px}.grid .utility{margin-top:0;padding:8px 10px}.grid .taskListRow{margin-top:5px}.grid .calendarCard .cardHead{min-height:34px}}
+
+.mobileTodayJump,.mobileCapacityButton{display:none}
+@media(max-width:760px){
+ .minimalHeader{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:5px 8px;padding-bottom:9px;margin-bottom:8px}
+ .minimalHeader .dateNavigation{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:30px minmax(0,1fr) 30px;grid-template-rows:32px 20px;align-items:center;gap:0}
+ .minimalHeader .datePrevious{grid-column:1;grid-row:1;width:28px;height:28px;min-height:28px}
+ .minimalHeader .datePicker{grid-column:2;grid-row:1;justify-self:center;min-width:0}
+ .minimalHeader .datePicker summary{min-height:30px;height:30px;padding:2px 6px;font-size:13px;white-space:nowrap}
+ .minimalHeader .dateNext{grid-column:3;grid-row:1;width:28px;height:28px;min-height:28px}
+ .minimalHeader .mobileTodayJump{display:block;grid-column:2;grid-row:2;justify-self:center;min-height:18px;height:18px;padding:0 8px;border:1px solid #d9deea;border-radius:6px;background:#fff;color:#697386;font-size:9px;line-height:1}
+ .minimalHeader .planButton{grid-column:1;grid-row:2;width:auto;height:34px;min-height:34px;padding:0 10px;font-size:12px}
+ .minimalHeader .capacityEditor{display:none}
+ .minimalHeader .mobileCapacityButton{display:grid;grid-column:2;grid-row:2;place-items:center;justify-self:end;width:34px;height:34px;min-height:34px;padding:0;border:1px solid var(--line);background:#fff;color:var(--muted)}
+ .calendarControls{flex-direction:row;align-items:center;justify-content:flex-end;gap:6px;margin:-3px 0 7px}
+ .calendarControls>.todayJump,.calendarControls>.dateStrip{display:none}
+ .dashboardViewSwitch{align-self:auto}
+ .grid,.grid.listMode{grid-template-areas:"workload" "newtask" "confirmed" "open" "calendar" "projects" "notes";gap:8px}
+ .grid.weekMode{grid-template-areas:"workload" "newtask" "weekly" "open" "calendar" "projects" "notes";gap:8px}
+ .grid>.workload{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:6px 9px;margin:0;border:1px solid var(--line);border-radius:8px}
+ .grid>.workload>div:first-child{display:flex;align-items:baseline;gap:6px;margin:0}
+ .grid>.workload .eyebrow{font-size:9px;letter-spacing:0}
+ .grid>.workload h2{margin:0;font-size:14px;line-height:1.15}
+ .grid>.workload h2 small{font-size:10px}
+ .grid>.workload .progress{flex:1;min-width:48px;height:4px;margin:0}
+ .grid>.workload .loadWarning{margin:0;font-size:9px;line-height:1.15}
+ .grid>.workload .loadWarning .icon{width:11px;height:11px}
+ .grid>.workload .loadWarning.full{display:none}
+ .grid .topNewTask,.grid .confirmedCard,.grid .weeklyPlanCard,.grid .openTasksCard,.grid .calendarCard{padding:7px 8px}
+ .grid .cardHead{margin-bottom:5px}
+ .grid .quickTaskField>input{padding:6px 3px!important;text-align:left}
+ .grid .quickTaskField>button{width:34px;min-width:34px;min-height:34px}
+ .grid .taskListRow{gap:3px;min-height:40px;margin:3px 0 0;padding:1px 3px}
+ .grid .taskMain{min-width:0;gap:2px}
+ .grid .taskListRow .taskCheck{flex:0 0 28px;width:28px;height:34px}
+ .grid .taskTitle{min-height:30px;padding:2px 0;font-size:12px;line-height:1.3}
+ .grid .taskSignals{max-width:52%;gap:3px;flex-wrap:wrap;white-space:normal;font-size:9px}
+ .grid .taskSignals i{min-width:20px;padding:1px 3px;font-size:9px}
+ .grid .taskSignals b{gap:2px;font-size:9px}
+ .grid .taskSignals .icon{width:11px;height:11px}
+ .grid .taskCollection.isCollapsed{-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 78%,transparent 100%)}
+ .grid .showMoreTasks{min-height:30px;margin-top:5px;padding:3px;font-size:10px}
+ .grid .calendarCard .cardHead{min-height:30px;margin-bottom:4px}
+ .grid .timeline{display:none}
+ .grid .mobileEventList{display:grid;gap:5px;min-height:116px;max-height:152px;overflow:auto;padding:3px 1px}
+ .grid .mobileEventList.expanded{min-height:320px;max-height:60vh}
+ .grid .mobileEvent{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;min-height:34px;padding:5px 8px;border:1px solid #dfe5ef;border-inline-start:3px solid var(--blue);border-radius:7px;background:#f6f8ff}
+ .grid .mobileEvent bdi{font-size:10px;font-variant-numeric:tabular-nums;color:#2447b7;white-space:nowrap;direction:ltr}
+ .grid .mobileEvent strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:550}
+ .grid .emptyEvents{margin:0;padding:4px;color:var(--muted);font-size:11px}
+ .grid .calendarExpand{min-height:27px;padding:3px 7px;border:0;background:transparent;color:var(--muted);font-size:10px;text-align:center}
+ .grid .eventEditor>summary{min-height:28px;padding:4px 0;font-size:10px}
+ .capacityDialog{width:min(360px,100%);padding:18px}
+ .capacityDialog .draftHead{margin-bottom:14px}
+ .capacityDialog label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+ .capacityDialog input{width:100%;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+ .capacityDialog .wide{margin-top:10px}
+}
