@@ -16,4 +16,9 @@ describe("remaining manual budget", () => {
   it("retains legacy budgets without inventing a timestamp", () => {
     expect(remainingManualBudget(migrateManualBudget("2026-11-11", 180), [base])).toBe(180);
   });
+  it("counts each completed stage once and restores only reopened stages",()=>{
+    const staged={...base,duration:120,stages:[{id:"a",title:"A",duration:45,completed:true,completedAt:"2026-11-11T11:00:00Z"},{id:"b",title:"B",duration:75,completed:true,completedAt:"2026-11-11T12:00:00Z"}]};
+    expect(remainingManualBudget(budget,[staged])).toBe(60);
+    expect(remainingManualBudget(budget,[{...staged,completed:false,stages:[staged.stages[0],{...staged.stages[1],completed:false}]}])).toBe(135);
+  });
 });

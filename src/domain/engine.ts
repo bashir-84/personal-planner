@@ -1,5 +1,6 @@
-import { Appointment, Conflict, Draft, PlanItem, Task } from "./types";
+import { Appointment, Conflict, Draft, PlanChange, PlanItem, Task, UnscheduledItem } from "./types";
 import { remainingStart, tehranReferenceTime, type ReferenceTime } from "./referenceTime";
+import {remainingDuration} from "./taskStructure";
 
 export const WORK_START=9*60, WORK_END=24*60, DEFAULT_RATIO=2/3;
 export type Interval={start:number;end:number};
@@ -21,16 +22,84 @@ export function capacityForDay(appointments:Appointment[],day:string,manual?:num
 export function capacityForReferenceDay(appointments:Appointment[],day:string,reference:ReferenceTime,manual?:number):Capacity{
   return capacityForDay(appointments,day,manual,remainingStart(day,reference));
 }
-function fit(intervals:Interval[],duration:number,used:Interval[]):Interval|undefined{
-  const occupied=mergeIntervals(used); for(const base of intervals){let cursor=base.start; for(const b of occupied){if(b.end<=cursor||b.start>=base.end)continue;if(b.start-cursor>=duration)return{start:cursor,end:cursor+duration};cursor=Math.max(cursor,b.end);}if(base.end-cursor>=duration)return{start:cursor,end:cursor+duration};}
+export function fitSlot(intervals:Interval[],duration:number,used:Interval[],latestEnd=WORK_END):Interval|undefined{
+  if(duration<=0)return undefined;
+  const occupied=mergeIntervals(used); for(const base of intervals){let cursor=base.start;const end=Math.min(base.end,latestEnd);if(cursor>=end)continue;for(const b of occupied){if(b.end<=cursor||b.start>=end)continue;if(b.start-cursor>=duration)return{start:cursor,end:cursor+duration};cursor=Math.max(cursor,b.end);}if(end-cursor>=duration)return{start:cursor,end:cursor+duration};}
+}
+export function planItemDuration(item:PlanItem,tasks:Task[]):number{
+  const task=tasks.find(t=>t.id===item.taskId);if(!task)return 0;
+  return item.stageId?task.stages?.find(stage=>stage.id===item.stageId&&!stage.completed)?.duration??0:remainingDuration(task);
 }
 export function validate(items:PlanItem[],tasks:Task[],appointments:Appointment[],budgets:Record<string,number>,reference?:ReferenceTime):Conflict[]{
   const conflicts:Conflict[]=[]; const days=[...new Set(items.map(i=>i.day))];
-  for(const day of days){const dayItems=items.filter(i=>i.day===day&& !tasks.find(t=>t.id===i.taskId)?.completed);const total=dayItems.reduce((n,i)=>n+(tasks.find(t=>t.id===i.taskId)?.duration??0),0);const cap=capacityForDay(appointments,day,budgets[day],reference?remainingStart(day,reference):undefined);if(total>cap.effectiveCapacity)conflicts.push({type:"capacity",day,minutes:total-cap.effectiveCapacity,message:`${total-cap.effectiveCapacity} دقیقه کسری ظرفیت`});const used:Interval[]=[];for(const item of dayItems){const task=tasks.find(t=>t.id===item.taskId);if(!task)continue;const slot=fit(cap.free,task.duration,used);if(!slot)conflicts.push({type:"continuity",day,taskId:task.id,message:`«${task.title}» بازهٔ پیوسته ندارد`});else used.push(slot);if(task.deadline){const deadline=tehranReferenceTime(new Date(task.deadline));if(day>deadline.day||(day===deadline.day&&(!slot||slot.end>deadline.minute)))conflicts.push({type:"deadline",day,taskId:task.id,message:`«${task.title}» از موعد عبور می‌کند`});}}}
+  for(const day of days){const dayItems=items.filter(i=>i.day===day&&planItemDuration(i,tasks)>0);const total=dayItems.reduce((n,i)=>n+planItemDuration(i,tasks),0);const cap=capacityForDay(appointments,day,budgets[day],reference?remainingStart(day,reference):undefined);if(total>cap.effectiveCapacity)conflicts.push({type:"capacity",day,minutes:total-cap.effectiveCapacity,message:`${total-cap.effectiveCapacity} دقیقه کسری ظرفیت`});const used:Interval[]=[];for(const item of dayItems){const task=tasks.find(t=>t.id===item.taskId);if(!task)continue;const slot=fitSlot(cap.free,planItemDuration(item,tasks),used);if(!slot)conflicts.push({type:"continuity",day,taskId:task.id,message:`«${task.title}» بازهٔ پیوسته ندارد`});else used.push(slot);if(task.deadline){const deadline=tehranReferenceTime(new Date(task.deadline));if(day>deadline.day||(day===deadline.day&&(!slot||slot.end>deadline.minute)))conflicts.push({type:"deadline",day,taskId:task.id,message:`«${task.title}» از موعد عبور می‌کند`});}}}
+  for(const task of tasks.filter(task=>task.stages?.length)){
+    let previous:PlanItem|undefined;
+    for(const stage of task.stages??[]){const item=items.find(item=>item.taskId===task.id&&item.stageId===stage.id);if(!item)continue;
+      if(previous&&(item.day<previous.day||(item.day===previous.day&&items.indexOf(item)<items.indexOf(previous))))conflicts.push({type:"order",day:item.day,taskId:task.id,message:`«${task.title}» stages are out of order`});
+      previous=item;
+    }
+  }
   return conflicts;
 }
-export function makeDraft(tasks:Task[],days:string[],appointments:Appointment[],budgets:Record<string,number>,revision:number,taskOrder?:Task[],reference?:ReferenceTime):Draft{
-  const defaultOrder=(a:Task,b:Task)=>Number(b.deadlineKind==="hard")-Number(a.deadlineKind==="hard")||(b.importance??0)-(a.importance??0)||(b.urgency??0)-(a.urgency??0);const open=taskOrder?taskOrder.filter(t=>!t.completed&&tasks.some(source=>source.id===t.id)):tasks.filter(t=>!t.completed).sort(defaultOrder);const items:PlanItem[]=[];
-  for(const task of open){let placed=false;for(const day of days){const candidate=[...items,{taskId:task.id,day}];if(!validate(candidate,tasks,appointments,budgets,reference).some(c=>c.taskId===task.id||c.day===day&&c.type==="capacity")){items.push({taskId:task.id,day});placed=true;break;}}if(!placed)items.push({taskId:task.id,day:days[0],conflict:"در این چینش جا نگرفت"});}
-  return{id:crypto.randomUUID(),baseRevision:revision,createdAt:new Date().toISOString(),items,conflicts:validate(items,tasks,appointments,budgets,reference)};
+/** Importance 12, urgency 8, hard commitment 14, deadline proximity up to 12,
+ * last fitting day 20. Duration only breaks ties; IDs break final ties. */
+export function priorityScore(task:Task,days:string[],appointments:Appointment[],reference?:ReferenceTime):number{
+  const deadline=task.deadline?tehranReferenceTime(new Date(task.deadline)):undefined;
+  let score=(task.importance??3)*12+(task.urgency??3)*8+(task.deadlineKind==="hard"?14:0);
+  if(deadline){const eligible=days.filter(day=>day<=deadline.day);
+    score+=Math.max(0,12-eligible.length*2);
+    const piece=task.stages?.find(stage=>!stage.completed)?.duration??remainingDuration(task);
+    const fitting=eligible.filter(day=>{const cap=capacityForDay(appointments,day,undefined,reference?remainingStart(day,reference):undefined);return cap.effectiveCapacity>=piece&&fitSlot(cap.free,piece,[],day===deadline.day?deadline.minute:WORK_END)});
+    if(fitting.length===1)score+=20;
+  }
+  return score;
+}
+
+export function comparePlans(current:PlanItem[],proposed:PlanItem[]):PlanChange[]{
+  const changes:PlanChange[]=[];
+  for(const item of proposed){const old=current.find(previous=>previous.taskId===item.taskId&&previous.stageId===item.stageId);
+    if(!old)changes.push({taskId:item.taskId,kind:"added",to:item.day});
+    else if(old.day!==item.day)changes.push({taskId:item.taskId,kind:"moved",from:old.day,to:item.day});
+    else if(current.filter(previous=>previous.day===item.day).findIndex(previous=>previous.taskId===item.taskId&&previous.stageId===item.stageId)!==proposed.filter(previous=>previous.day===item.day).findIndex(previous=>previous.taskId===item.taskId&&previous.stageId===item.stageId))changes.push({taskId:item.taskId,kind:"reordered",from:item.day,to:item.day});
+  }
+  for(const item of current)if(!proposed.some(next=>next.taskId===item.taskId&&next.stageId===item.stageId))changes.push({taskId:item.taskId,kind:"removed",from:item.day});
+  return changes;
+}
+
+export function makeDraft(tasks:Task[],days:string[],appointments:Appointment[],budgets:Record<string,number>,revision:number,taskOrder?:Task[],reference?:ReferenceTime,current:PlanItem[]=[]):Draft{
+  const open=(taskOrder??tasks).filter(t=>!t.completed&&!t.skipped&&!t.recurrence&&tasks.some(source=>source.id===t.id));
+  if(!taskOrder)open.sort((a,b)=>priorityScore(b,days,appointments,reference)-priorityScore(a,days,appointments,reference)||a.duration-b.duration||a.id.localeCompare(b.id));
+  const items:PlanItem[]=[];const unscheduled:UnscheduledItem[]=[];
+  for(const task of open){const deadline=task.deadline?tehranReferenceTime(new Date(task.deadline)):undefined;
+    const overdue=!!deadline&&!!reference&&(deadline.day<reference.day||(deadline.day===reference.day&&deadline.minute<reference.minute));
+    const pieces=task.stages?.length?task.stages.filter(stage=>!stage.completed).map(stage=>({stageId:stage.id,duration:stage.duration})): [{stageId:undefined,duration:task.duration}];
+    let earliest=days[0];let previousEnd=0;
+    for(const piece of pieces){
+    const old=current.find(item=>item.taskId===task.id&&item.stageId===piece.stageId);
+    const candidates=[...days].filter(day=>day>=earliest).sort((a,b)=>Number(b===old?.day)-Number(a===old?.day)||a.localeCompare(b));
+    let placed=false,hadBudget=false;
+    for(const day of candidates){if(reference&&day<reference.day)continue;if(task.recurrenceSourceId&&task.targetDay&&task.targetDay>day)continue;
+      const template=tasks.find(source=>source.id===task.recurrenceSourceId);
+      if(template?.recurrence?.sameDay&&day!==task.targetDay)continue;
+      const cap=capacityForDay(appointments,day,budgets[day],reference?remainingStart(day,reference):undefined);
+      const sameDay=items.filter(item=>item.day===day);
+      const used=sameDay.reduce((sum,item)=>sum+planItemDuration(item,tasks),0);
+      if(used+piece.duration>cap.effectiveCapacity)continue;
+      hadBudget=true;
+      if(deadline&&!overdue&&task.deadlineKind==="hard"&&day>deadline.day)continue;
+      const occupied=sameDay.flatMap(item=>item.start!==undefined&&item.end!==undefined?[{start:item.start,end:item.end}]:[]);
+      const latestEnd=deadline&&!overdue&&task.deadlineKind==="hard"&&day===deadline.day?deadline.minute:WORK_END;
+      const stageFree=cap.free.map(interval=>({...interval,start:Math.max(interval.start,day===earliest?previousEnd:0)})).filter(interval=>interval.end>interval.start);
+      const slot=fitSlot(stageFree,piece.duration,occupied,latestEnd);
+      if(!slot)continue;
+      const reason=old?.day===day?"Keep manual plan":overdue?"Overdue · next fit":deadline&&day===deadline.day?"Deadline soon":piece.duration<=60?"Fits available time":"Priority fit";
+      items.push({taskId:task.id,stageId:piece.stageId,day,start:slot.start,end:slot.end,reason});placed=true;earliest=day;previousEnd=slot.end;break;
+    }
+    if(!placed){const status:UnscheduledItem["status"]=piece.duration>WORK_END-WORK_START?"split":deadline&&!overdue&&task.deadlineKind==="hard"?"deadline":hadBudget?"no-slot":"waiting";
+      const reason={split:"Split required",deadline:"Deadline conflict","no-slot":"No continuous slot",waiting:"Waiting for capacity"}[status];
+      unscheduled.push({taskId:task.id,status,reason});break;}
+    }
+  }
+  return{id:crypto.randomUUID(),baseRevision:revision,createdAt:new Date().toISOString(),items,unscheduled,changes:comparePlans(current,items),conflicts:validate(items,tasks,appointments,budgets,reference)};
 }

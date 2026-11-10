@@ -13,4 +13,12 @@ describe("Tehran reference time", () => {
     expect(remainingStart(reference.day, { ...reference, minute: 30 })).toBe(540);
     expect(remainingStart(reference.day, { ...reference, minute: 1500 })).toBe(1440);
   });
+  it("changes the remaining day at Tehran midnight without using the UTC date",()=>{
+    const before=tehranReferenceTime(new Date("2026-11-10T20:29:00Z"));
+    const after=tehranReferenceTime(new Date("2026-11-10T20:30:00Z"));
+    expect(before).toEqual({day:"2026-11-10",minute:1439});
+    expect(after).toEqual({day:"2026-11-11",minute:0});
+    expect(remainingStart(before.day,after)).toBe(1440);
+    expect(remainingStart(after.day,after)).toBe(540);
+  });
 });

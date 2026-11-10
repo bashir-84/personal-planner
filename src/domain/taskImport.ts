@@ -183,7 +183,23 @@ export function prepareImport(input: string, current: PlannerState): ImportPrevi
         }
       }
     }
-    if (raw.recurrence != null) row.warnings.push("Recurrence preserved in metadata; automatic recurring instances are not supported yet.");
+    const stages: Task["stages"] = Array.isArray(raw.stages) ? raw.stages.flatMap((source,index)=>{
+      if(!object(source)){row.errors.push(`stages[${index}] must be an object.`);return []}
+      const title=str(source.title),minutes=int(source.duration??source.estimated_minutes);
+      if(!title||!minutes||minutes<1){row.errors.push(`stages[${index}] requires title and positive duration.`);return []}
+      return [{id:str(source.id)??crypto.randomUUID(),title,duration:minutes,completed:source.completed===true,
+        ...(timestamp(source.completed_at)?{completedAt:String(source.completed_at),completedDay:tehranDay(String(source.completed_at))}:{})}];
+    }) : undefined;
+    if(raw.stages!=null&&!Array.isArray(raw.stages))row.errors.push("stages must be an array.");
+    const repeat=optionalObject(raw.recurrence);
+    const frequency=str(repeat.frequency);
+    const startDay=str(repeat.startDay??repeat.start_day);
+    const recurrence:Task["recurrence"]=(frequency==="daily"||frequency==="weekly")&&startDay&&/^\d{4}-\d{2}-\d{2}$/.test(startDay)?{
+      frequency,startDay,interval:Math.max(1,int(repeat.interval)??1),sameDay:repeat.sameDay===true||repeat.same_day===true,
+      ...(Array.isArray(repeat.weekdays)?{weekdays:repeat.weekdays.filter((day):day is number=>typeof day==="number"&&Number.isInteger(day)&&day>=0&&day<=6)}:{}),
+      ...(str(repeat.endDay??repeat.end_day)?{endDay:str(repeat.endDay??repeat.end_day)}:{})
+    }:undefined;
+    if(raw.recurrence!=null&&!recurrence)row.warnings.push("Recurrence unrecognized; preserved in import metadata.");
     if (Array.isArray(raw.depends_on) && raw.depends_on.length) row.warnings.push("Dependencies preserved in metadata; enforcement is not supported yet.");
     const planned = raw.planned_sessions;
     if (planned && Array.isArray(planned) && planned.some(x => object(x) && x.state !== "confirmed"))
@@ -196,7 +212,7 @@ export function prepareImport(input: string, current: PlannerState): ImportPrevi
     if (raw.deadline_at && !kind) row.warnings.push("Deadline kind unspecified: imported as flexible, not assumed hard.");
     if (row.errors.length) { row.status = "invalid"; return; }
     const now = new Date().toISOString();
-    const duration = remaining !== undefined && remaining > 0 ? remaining : (estimate ?? 30);
+    const duration = stages?.length?stages.reduce((sum,stage)=>sum+stage.duration,0):remaining !== undefined && remaining > 0 ? remaining : (estimate ?? 30);
     const imported: Task = {
       id: crypto.randomUUID(), title: row.title, duration,
       estimateSource: estimate === undefined && remaining === undefined ? "default" : "manual",
@@ -205,6 +221,8 @@ export function prepareImport(input: string, current: PlannerState): ImportPrevi
       ...(urgency === undefined ? {} : { urgency }),
       ...(raw.deadline_at ? { deadline: String(raw.deadline_at) } : {}),
       deadlineKind: raw.deadline_at ? (kind === "hard" ? "hard" : "flexible") : "none",
+      ...(stages?.length?{stages}:{}),
+      ...(recurrence?{recurrence}:{}),
       completed: status === "completed" || status === "done",
       ...(timestamp(raw.completed_at) ? { completedAt: String(raw.completed_at), completedDay: tehranDay(String(raw.completed_at)) } : {}),
       ...(row.confirmed ? { plannedDay: row.confirmed.day } : {}),

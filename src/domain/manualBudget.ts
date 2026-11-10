@@ -9,6 +9,13 @@ export function remainingManualBudget(entry: ManualBudgetEntry, tasks: Task[]): 
   const recorded = Date.parse(entry.recordedAt);
   if (!Number.isFinite(recorded)) return Math.max(0, entry.minutes);
   const consumed = tasks.reduce((sum, task) => {
+    if(task.stages?.length){return sum+task.stages.reduce((stageSum,stage)=>{
+      if(!stage.completed||!stage.completedAt)return stageSum;
+      const completed=Date.parse(stage.completedAt);
+      if(!Number.isFinite(completed)||completed<recorded)return stageSum;
+      const day=stage.completedDay??tehranReferenceTime(new Date(completed)).day;
+      return day===entry.day?stageSum+stage.duration:stageSum;
+    },0)}
     if (!task.completed) return sum;
     const completed = task.completedAt ? Date.parse(task.completedAt) : NaN;
     if (!Number.isFinite(completed) || completed < recorded) return sum;

@@ -62,4 +62,14 @@ describe("AI task import", () => {
     expect(stored?.importMetadata?.raw.recurrence).toEqual(recurrence);
     expect(stored?.importMetadata?.raw.notes).toBe("Journal quote");
   });
+  it("imports ordered stages and a supported repeat rule without losing the source",()=>{
+    const stages=[{id:"a",title:"First",duration:40},{id:"b",title:"Second",duration:50}];
+    const recurrence={frequency:"weekly",startDay:"2026-11-10",interval:1,weekdays:[2],sameDay:true};
+    const preview=prepareImport(payload([{title:"Course",stages,recurrence}]),emptyState);
+    expect(preview.errors).toEqual([]);
+    const task=mergeImport(preview,emptyState).tasks[0];
+    expect(task.duration).toBe(90);
+    expect(task.stages?.map(stage=>stage.id)).toEqual(["a","b"]);
+    expect(task.recurrence).toEqual(recurrence);
+  });
 });
