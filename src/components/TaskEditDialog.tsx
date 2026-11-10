@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import type { PlannerState, Task } from "@/domain/types";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
+import {dayOffset,deadlineDayOffset} from "@/domain/calendarDays";
+import {tehranReferenceTime} from "@/domain/referenceTime";
 
 const jalaliFormatter = new Intl.DateTimeFormat("en-US-u-ca-persian", {
   calendar: "persian", year: "numeric", month: "2-digit", day: "2-digit", timeZone: "UTC"
@@ -50,15 +52,19 @@ const dateWithTime = (day: string, time: string) => {
   return new Date(Date.UTC(year, month - 1, date, hour - 3, minute - 30)).toISOString();
 };
 
-export function TaskEditDialog({ task, projects, onChange, onToggle, onDelete, onClose }: {
+export function TaskEditDialog({ task, projects, onChange, onToggle, onDelete, onSkip, onClose, referenceDay, referenceInstant }: {
   task: Task;
   projects: PlannerState["projects"];
   onChange: (patch: Partial<Task>) => void;
   onToggle: (completed: boolean) => void;
   onDelete?: () => void;
+  onSkip?: () => void;
   onClose: () => void;
+  referenceDay?: string;
+  referenceInstant?: string;
 }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [valid,setValid]=useState(true);
   const [draft, setDraft] = useState(task);
   const [pendingCompleted, setPendingCompleted] = useState<boolean | undefined>();
   useEffect(() => {
@@ -77,54 +83,69 @@ export function TaskEditDialog({ task, projects, onChange, onToggle, onDelete, o
       <div className="draftHead"><div><span className="eyebrow">Task</span><h2>Edit task</h2></div>
         <button className="iconButton" aria-label="Close" title="Close" onClick={onClose}><Icon name="close" /></button>
       </div>
-      <TaskEditor task={isMobile ? draft : task} projects={projects}
+      <TaskEditor task={isMobile ? draft : task} projects={projects} referenceDay={referenceDay} referenceInstant={referenceInstant} onValidityChange={setValid}
         onChange={patch => isMobile ? setDraft(value => ({ ...value, ...patch })) : onChange(patch)}
         onToggle={completed => isMobile ? setPendingCompleted(completed) : onToggle(completed)}
-        onDelete={onDelete} showHint={!isMobile} />
-      {isMobile && <div className="taskDialogConfirm"><button className="primary" onClick={save}>Confirm</button></div>}
+        onDelete={onDelete} onSkip={onSkip} showHint={!isMobile} />
+      {isMobile && <div className="taskDialogConfirm"><button className="primary" disabled={!valid} onClick={save}>Confirm</button></div>}
     </section>
   </Modal>;
 }
 
-export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClose }: {
+export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClose, referenceDay, referenceInstant }: {
   task: Task;
   projects: PlannerState["projects"];
   onChange: (patch: Partial<Task>) => void;
   onConfirm: () => void;
   onClose: () => void;
+  referenceDay?: string;
+  referenceInstant?: string;
 }) {
+  const [valid,setValid]=useState(true);
   return <Modal label="New task" onClose={onClose}>
     <section className="draft taskDialog">
       <div className="draftHead"><div><span className="eyebrow">Task</span><h2>New task</h2></div>
         <button className="iconButton" aria-label="Close" title="Close" onClick={onClose}><Icon name="close" /></button>
       </div>
-      <TaskEditor task={task} projects={projects} onChange={onChange} onToggle={() => undefined} showActions={false} showHint={false} />
-      <div className="taskDialogConfirm"><button className="primary" disabled={!task.title.trim()} onClick={onConfirm}>Confirm</button></div>
+      <TaskEditor task={task} projects={projects} referenceDay={referenceDay} referenceInstant={referenceInstant} onValidityChange={setValid} onChange={onChange} onToggle={() => undefined} showActions={false} showHint={false} />
+      <div className="taskDialogConfirm"><button className="primary" disabled={!task.title.trim()||!valid} onClick={onConfirm}>Confirm</button></div>
     </section>
   </Modal>;
 }
 
-export function TaskEditor({ task, projects, onChange, onToggle, onDelete, showActions = true, showHint = true }: {
+export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSkip, showActions = true, showHint = true, referenceDay, referenceInstant, onValidityChange }: {
   task: Task;
   projects: PlannerState["projects"];
   onChange: (patch: Partial<Task>) => void;
   onToggle: (completed: boolean) => void;
   onDelete?: () => void;
+  onSkip?: () => void;
   showActions?: boolean;
   showHint?: boolean;
+  referenceDay?: string;
+  referenceInstant?: string;
+  onValidityChange?: (valid:boolean)=>void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [jalaliDate, setJalaliDate] = useState(persianDateValue(task.deadline));
+  const [repeatStart,setRepeatStart]=useState(task.recurrence?persianDateValue(dateWithTime(task.recurrence.startDay,"12:00")):"");
+  const [repeatEnd,setRepeatEnd]=useState(task.recurrence?.endDay?persianDateValue(dateWithTime(task.recurrence.endDay,"12:00")):"");
+  const todayDay=referenceDay??tehranReferenceTime(new Date()).day;
+  const invalidDate=jalaliDate.trim().length>0&&!persianToGregorian(jalaliDate);
+  const invalidRepeat=Boolean(task.recurrence)&&(!persianToGregorian(repeatStart)||Boolean(repeatEnd&&!persianToGregorian(repeatEnd)));
+  useEffect(()=>onValidityChange?.(!invalidDate&&!invalidRepeat),[invalidDate,invalidRepeat,onValidityChange]);
+  const relativeDays=invalidDate?"":task.deadline?deadlineDayOffset(task.deadline,todayDay):"";
   useEffect(() => setJalaliDate(persianDateValue(task.deadline)), [task.id, task.deadline]);
+  useEffect(()=>{setRepeatStart(task.recurrence?persianDateValue(dateWithTime(task.recurrence.startDay,"12:00")):"");setRepeatEnd(task.recurrence?.endDay?persianDateValue(dateWithTime(task.recurrence.endDay,"12:00")):"")},[task.id,task.recurrence?.startDay,task.recurrence?.endDay]);
   const project = projects.find(item => item.id === task.projectId);
   const durationHours = Math.floor(task.duration / 60);
   const durationMinutes = task.duration % 60;
   const timeValue = localClock(task.deadline);
   const setDuration = (hours: number, minutes: number) => onChange({ duration: Math.max(1, hours * 60 + minutes), estimateSource: "manual" });
   const setDeadlineDate = (value: string) => {
-    if (!value) { onChange({ deadline: undefined }); return; }
+    if (!value) { onChange({ deadline: undefined,deadlineKind:"none" }); return; }
     const gregorian = persianToGregorian(value);
-    if (gregorian) onChange({ deadline: dateWithTime(gregorian, timeValue) });
+    if (gregorian) onChange({ deadline: dateWithTime(gregorian, timeValue),deadlineKind:task.deadlineKind==="none"?"flexible":task.deadlineKind });
   };
   const setDeadlineTime = (value: string) => {
     if (task.deadline) {
@@ -133,6 +154,15 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, showA
       onChange({ deadline: dateWithTime(day, value) });
     }
   };
+  const patchStages=(stages:NonNullable<Task["stages"]>)=>{
+    const complete=stages.length>0&&stages.every(stage=>stage.completed);
+    const instant=referenceInstant??new Date().toISOString();
+    onChange({stages,duration:stages.length?stages.reduce((sum,stage)=>sum+stage.duration,0):task.duration,estimateSource:"manual",
+      completed:complete,completedAt:complete?(task.completedAt??instant):undefined,completedDay:complete?(task.completedDay??todayDay):undefined,
+      completionRecords:complete&&!task.completed?[...(task.completionRecords??[]),{day:todayDay,completedAt:instant}]:task.completionRecords});
+  };
+  const recurrence=task.recurrence;
+  const setRecurrence=(patch:Partial<NonNullable<Task["recurrence"]>>)=>onChange({recurrence:{frequency:"daily",startDay:todayDay,interval:1,sameDay:false,...recurrence,...patch}});
 
   return <div className="editorGrid taskEditorGrid">
     {showHint && <p className="editorHint">Changes save automatically.</p>}
@@ -152,15 +182,23 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, showA
     </div></fieldset>
     <fieldset className="deadlineTypeField"><legend>Deadline type</legend><div className="deadlineTypeOptions" role="radiogroup" aria-label="Deadline type">
       {([ ["none", "None"], ["hard", "Hard"], ["flexible", "Flexible"] ] as const).map(([value, label]) => <label key={value} className={task.deadlineKind === value ? "selected" : ""}>
-        <input type="radio" name={`deadline-${task.id}`} checked={task.deadlineKind === value} onChange={() => onChange({ deadlineKind: value })} />{label}
+        <input type="radio" name={`deadline-${task.id}`} checked={task.deadlineKind === value} onChange={() => onChange(value==="none"?{deadlineKind:value,deadline:undefined}:{deadlineKind:value})} />{label}
       </label>)}
     </div></fieldset>
     <fieldset className="taskDeadlineField"><legend>Deadline · شمسی</legend><div className="deadlineInputs">
-      <label><span className="srOnly">Persian date, year/month/day</span><input dir="ltr" inputMode="numeric" placeholder="۱۴۰۵/۰۸/۱۹" aria-label="Deadline Persian date" value={jalaliDate} onChange={event => { setJalaliDate(event.target.value); setDeadlineDate(event.target.value); }} /></label>
+      <label><span className="srOnly">Persian date, year/month/day</span><input dir="ltr" inputMode="numeric" placeholder="۱۴۰۵/۰۸/۱۹" aria-label="Deadline Persian date" aria-invalid={Boolean(invalidDate)} value={jalaliDate} onChange={event => { setJalaliDate(event.target.value); setDeadlineDate(event.target.value); }} /></label>
       <label><span className="srOnly">Time</span><input dir="ltr" type="time" aria-label="Deadline time" value={task.deadline ? timeValue : "12:00"} disabled={!task.deadline} onChange={event => setDeadlineTime(event.target.value)} /></label>
-    </div></fieldset>
+      <label><span className="srOnly">Days from today</span><input dir="ltr" type="number" step="1" aria-label="Days from today" placeholder="Days" value={relativeDays} onChange={event=>{const raw=event.target.value;if(raw===""){setJalaliDate("");onChange({deadline:undefined,deadlineKind:"none"});return}const count=Number(raw);if(!Number.isInteger(count)||Math.abs(count)>36500)return;const target=dayOffset(todayDay,count);const stamp=dateWithTime(target,timeValue);setJalaliDate(persianDateValue(stamp));onChange({deadline:stamp,deadlineKind:task.deadlineKind==="none"?"flexible":task.deadlineKind})}}/></label>
+    </div>{invalidDate&&<small role="alert">Enter a valid Persian date</small>}{typeof relativeDays==="number"&&relativeDays<0&&<small>Past · {Math.abs(relativeDays)} days</small>}</fieldset>
     <RatingField label="Importance" value={task.importance} onChange={value => onChange({ importance: value })} />
     <RatingField label="Urgency" value={task.urgency} onChange={value => onChange({ urgency: value })} />
+    <details className="taskAdvanced"><summary>Advanced {task.stages?.length?`· ${task.stages.length} stages`:""}{recurrence?` · ${recurrence.frequency}`:""}</summary>
+      <div className="advancedContent"><div className="advancedHeading"><strong>Stages</strong><button type="button" onClick={()=>patchStages([...(task.stages??[]),{id:crypto.randomUUID(),title:"",duration:30,completed:false}])}>+ Add stage</button></div>
+      {task.stages?.map((stage,index)=><div className="stageEditor" key={stage.id}><span>{String(index+1).padStart(2,"0")}</span><input aria-label={`Stage ${index+1} title`} placeholder="Stage title" value={stage.title} onChange={event=>patchStages(task.stages!.map(item=>item.id===stage.id?{...item,title:event.target.value}:item))}/><input aria-label={`Stage ${index+1} minutes`} type="number" min="1" value={stage.duration} onChange={event=>patchStages(task.stages!.map(item=>item.id===stage.id?{...item,duration:Math.max(1,Number(event.target.value)||1)}:item))}/><button type="button" aria-label={`Move stage ${index+1} up`} disabled={index===0} onClick={()=>{const copy=[...task.stages!];[copy[index-1],copy[index]]=[copy[index],copy[index-1]];patchStages(copy)}}>↑</button><button type="button" aria-label={`Move stage ${index+1} down`} disabled={index===task.stages!.length-1} onClick={()=>{const copy=[...task.stages!];[copy[index+1],copy[index]]=[copy[index],copy[index+1]];patchStages(copy)}}>↓</button><button type="button" aria-label={`Delete stage ${index+1}`} onClick={()=>patchStages(task.stages!.filter(item=>item.id!==stage.id))}>×</button><label className="stageDone"><input type="checkbox" checked={stage.completed} onChange={event=>patchStages(task.stages!.map(item=>item.id===stage.id?{...item,completed:event.target.checked,completedAt:event.target.checked?(referenceInstant??new Date().toISOString()):undefined,completedDay:event.target.checked?todayDay:undefined,parentActionId:undefined}:item))}/>Done</label></div>)}
+      <div className="advancedHeading"><strong>Repeat</strong><select aria-label="Repeat frequency" value={recurrence?.frequency??"none"} onChange={event=>event.target.value==="none"?onChange({recurrence:undefined}):setRecurrence({frequency:event.target.value as "daily"|"weekly"})}><option value="none">None</option><option value="daily">Daily</option><option value="weekly">Weekly</option></select></div>
+      {recurrence&&<div className="recurrenceEditor"><label>Start · شمسی<input aria-label="Repeat start Persian date" aria-invalid={!persianToGregorian(repeatStart)} value={repeatStart} onChange={event=>{setRepeatStart(event.target.value);const day=persianToGregorian(event.target.value);if(day)setRecurrence({startDay:day})}}/></label><label>Every<input aria-label="Repeat interval" type="number" min="1" value={recurrence.interval} onChange={event=>setRecurrence({interval:Math.max(1,Number(event.target.value)||1)})}/></label><label>End · شمسی<input aria-label="Repeat end Persian date" aria-invalid={Boolean(repeatEnd&&!persianToGregorian(repeatEnd))} placeholder="Optional" value={repeatEnd} onChange={event=>{setRepeatEnd(event.target.value);if(!event.target.value)setRecurrence({endDay:undefined});else{const day=persianToGregorian(event.target.value);if(day)setRecurrence({endDay:day})}}}/></label>{recurrence.frequency==="weekly"&&<div className="recurrenceDays" aria-label="Repeat weekdays">{[[6,"Sa"],[0,"Su"],[1,"Mo"],[2,"Tu"],[3,"We"],[4,"Th"],[5,"Fr"]].map(([day,label])=><label key={day}><input type="checkbox" checked={recurrence.weekdays?.includes(Number(day))??false} onChange={event=>setRecurrence({weekdays:event.target.checked?[...(recurrence.weekdays??[]),Number(day)]:(recurrence.weekdays??[]).filter(item=>item!==day)})}/>{label}</label>)}</div>}<label><input type="checkbox" checked={recurrence.sameDay} onChange={event=>setRecurrence({sameDay:event.target.checked})}/>Must be on target day</label></div>}{task.recurrenceSourceId&&onSkip&&!task.completed&&!task.skipped&&<button type="button" onClick={onSkip}>Skip this occurrence</button>}
+      </div>
+    </details>
     {showActions && <div className="taskEditorActions">
       <button className="dangerButton" onClick={() => onToggle(!task.completed)}><Icon name={task.completed ? "check" : "check"} />{task.completed ? "Reopen task" : "Move to completed"}</button>
       {onDelete && <button className={`taskDeleteButton ${confirmDelete ? "isConfirming" : ""}`} onClick={() => {

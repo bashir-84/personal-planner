@@ -1,0 +1,36 @@
+"use client";
+
+import Link from "next/link";
+import {useEffect,useMemo,useState} from "react";
+import {TaskEditDialog} from "@/components/TaskEditDialog";
+import type {PlannerState,Task} from "@/domain/types";
+import {emptyState,loadState,saveState} from "@/storage/local";
+
+const dateTime=new Intl.DateTimeFormat("fa-IR-u-ca-persian",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Tehran"});
+const dateOnly=new Intl.DateTimeFormat("fa-IR-u-ca-persian",{dateStyle:"medium",timeZone:"Asia/Tehran"});
+function completionLabel(task:Task){
+  const last=task.completionRecords?.at(-1)?.completedAt??task.completedAt;
+  if(last&&!Number.isNaN(Date.parse(last)))return dateTime.format(new Date(last));
+  return task.completedDay?dateOnly.format(new Date(`${task.completedDay}T12:00:00Z`)):"Time unknown";
+}
+
+export default function CompletedPage(){
+  const[state,setState]=useState<PlannerState>(emptyState);
+  const[ready,setReady]=useState(false);
+  const[editing,setEditing]=useState<string|null>(null);
+  useEffect(()=>{setState(loadState());setReady(true)},[]);
+  useEffect(()=>{if(ready)saveState(state)},[state,ready]);
+  const completed=useMemo(()=>state.tasks.filter(task=>task.completed).sort((a,b)=>{
+    const aTime=Date.parse(a.completionRecords?.at(-1)?.completedAt??a.completedAt??"")||0;
+    const bTime=Date.parse(b.completionRecords?.at(-1)?.completedAt??b.completedAt??"")||0;
+    return bTime-aTime||a.id.localeCompare(b.id);
+  }),[state.tasks]);
+  const task=state.tasks.find(item=>item.id===editing);
+  const update=(id:string,patch:Partial<Task>)=>setState(current=>({...current,revision:current.revision+1,tasks:current.tasks.map(item=>item.id===id?{...item,...patch}:item)}));
+  const reopen=(id:string)=>setState(current=>({...current,revision:current.revision+1,tasks:current.tasks.map(item=>item.id===id?{...item,completed:false,completedAt:undefined,completedDay:undefined}:item),confirmed:current.confirmed.filter(item=>item.taskId!==id)}));
+  return <main className="completedPage"><header><Link href="/">← Planner</Link><h1>Completed Tasks</h1><span>{completed.length}</span></header>{completed.length?<div className="completedList">{completed.map(item=>{
+    const project=state.projects.find(project=>project.id===item.projectId);
+    return <button className="completedItem" key={item.id} onClick={()=>setEditing(item.id)} style={{borderInlineStartColor:project?.color??"#8a968f"}}><strong>{item.title}{item.targetDay&&<small> · {dateOnly.format(new Date(`${item.targetDay}T12:00:00Z`))}</small>}</strong><span>{project?.name??"No project"} · {Math.floor(item.duration/60)}:{String(item.duration%60).padStart(2,"0")}</span><span>{item.deadline?`Due ${dateTime.format(new Date(item.deadline))}`:"No deadline"}</span><time>{completionLabel(item)}</time></button>})}</div>:<p className="completedEmpty">No completed tasks yet.</p>}
+    {task&&<TaskEditDialog task={task} projects={state.projects} onClose={()=>setEditing(null)} onChange={patch=>update(task.id,patch)} onToggle={complete=>{if(!complete)reopen(task.id);setEditing(null)}}/>}
+  </main>;
+}
