@@ -288,3 +288,14 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .card,.workload,.testToolbar{box-shadow:0 2px 8px #15223b0b,0 1px 2px #15223b08}
 .hasBackground .card,.hasBackground .workload,.hasBackground .testToolbar{box-shadow:0 3px 12px #0000001c,0 1px 3px #00000012}
 .cardHead h2,.workload h2{ text-shadow:0 1px 1px #15223b08 }
+
+/* Keep primary actions at the outer edges: menu left, Plan right. */
+.minimalHeader .planButton{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:2}
+.minimalHeader .menuButton{right:auto;left:0}
+@media(max-width:760px){
+ .shell{width:calc(100% - 24px);padding-top:6px}
+ .minimalHeader{grid-template-rows:30px 34px;row-gap:1px;padding-bottom:5px;margin-bottom:6px}
+ .minimalHeader .planButton{top:auto;bottom:0;right:0;transform:none}
+ .minimalHeader .menuButton{left:0;right:auto}
+ .minimalHeader .mobileTodayJump{grid-column:2;grid-row:2;justify-self:center;align-self:center}
+}
