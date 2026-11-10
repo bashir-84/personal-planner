@@ -213,3 +213,34 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 /* Align the project-color checkbox block with its compact mobile slot. */
 @media(max-width:760px){.grid .taskMain::before{inset-inline-start:0;inset-block:2px;width:28px}.grid .taskListRow .taskCheck{flex-basis:28px;width:28px}.grid .confirmedCard .taskCollection{gap:2px}.taskDialog .draftHead h2{font-size:19px;font-weight:700;white-space:normal}.taskDialogConfirm{position:sticky;bottom:-20px;z-index:2;margin-top:12px;padding:10px 0 2px;border-top:1px solid var(--line);background:#fff}.taskDialogConfirm .primary{width:100%;min-height:44px}}
 .taskDialogConfirm{display:flex;justify-content:flex-end;margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}.taskDialogConfirm .primary{min-width:120px}
+
+/* Optional image layer stays behind every planner card and control. */
+.shell.hasBackground{position:relative;isolation:isolate;background:transparent}
+.appBackgroundLayer{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.appBackgroundImage,.appBackgroundShade{position:absolute;inset:0}
+.appBackgroundImage{background-position:center;background-size:cover;background-repeat:no-repeat;will-change:filter,transform}
+.appBackgroundShade{inset:-2px}
+.backgroundDialog{width:min(640px,100%)}
+.backgroundInputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.backgroundInputs>label{display:grid;align-content:start;gap:7px;font-size:13px;font-weight:600;color:var(--ink)}
+.backgroundInputs input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:white;font-size:13px}
+.backgroundUpload input[type=file]{font-size:12px}
+.backgroundUpload small{font-size:11px;font-weight:400}
+.backgroundSliders{display:grid;gap:12px;margin:16px 0}
+.backgroundSliders label{display:grid;gap:5px}
+.backgroundSliders label>span{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)}
+.backgroundSliders b{color:var(--ink);font-variant-numeric:tabular-nums}
+.backgroundSliders input[type=range]{width:100%;height:24px;min-height:24px;padding:0;accent-color:var(--blue)}
+.backgroundPreviewWrap{display:grid;gap:6px}
+.backgroundPreviewLabel{font-size:12px;color:var(--muted);font-weight:600}
+.backgroundPreview{position:relative;isolation:isolate;min-height:190px;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#dfe3ea}
+.backgroundPreviewImage,.backgroundPreviewShade{position:absolute;inset:0}
+.backgroundPreviewImage{width:100%;height:100%;background-position:center;background-size:cover;object-fit:cover;filter:blur(var(--preview-blur));transform:scale(1.08)}
+.backgroundPreviewShade{background:rgba(0,0,0,var(--preview-darkness))}
+.backgroundPreviewPlaceholder{position:absolute;inset:0;display:grid;place-items:center;color:#667085;font-size:13px}
+.backgroundPreviewSample{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:white;text-shadow:0 1px 4px #0008}
+.backgroundPreviewSample strong{font-size:19px}.backgroundPreviewSample span{font-size:12px}
+.backgroundMessage{margin:8px 0;color:var(--red);font-size:12px}
+.backgroundActions{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.backgroundActions .primary{min-width:120px}.backgroundClear{color:var(--red);border-color:#e8c2c8}
+@media(max-width:600px){.backgroundInputs{grid-template-columns:1fr;gap:10px}.backgroundPreview{min-height:150px}.backgroundActions .primary{min-width:100px}.backgroundDialog{padding:16px}}
