@@ -29,6 +29,7 @@ test("task editing, completion undo, persistence and keyboard dialog behavior", 
 test("selected date is reversible and planning rechecks reselected days", async ({page}) => {
   await page.goto("test/");
   const date = page.locator(".datePicker summary");
+  await expect(date).toContainText("سه‌شنبه ۱۹ آبان");
   const original = await date.innerText();
   await page.getByRole("button",{name:"Next day",exact:true}).click();
   await expect(date).not.toHaveText(original);
@@ -46,6 +47,18 @@ test("selected date is reversible and planning rechecks reselected days", async 
   await page.getByRole("button",{name:"Confirm",exact:true}).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator(".confirmedRow").first()).toBeVisible();
+});
+
+test("weekly plan uses Persian dates and visualizes all seven days", async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  await page.goto("test/");
+  await page.getByRole("button",{name:"Plan tasks",exact:true}).click();
+  await page.getByRole("button",{name:"Week",exact:true}).click();
+  const week = page.getByLabel("Weekly plan");
+  await expect(week.locator(".weekDay")).toHaveCount(7);
+  await expect(week.locator(".weekDay>header strong")).toHaveText(["سه‌شنبه","چهارشنبه","پنجشنبه","جمعه","شنبه","یکشنبه","دوشنبه"]);
+  await expect(week.locator(".weekTask").first()).toBeVisible();
+  expect(await page.locator(".draft").evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
 });
 
 for(const width of [320,390,768,1440]) {

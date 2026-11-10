@@ -36,3 +36,23 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 @media(max-width:760px){.shell{width:calc(100% - 20px);padding-top:10px}.minimalHeader{gap:8px}.dateNavigation{gap:0}.datePicker summary{font-size:14px}.card{padding:12px}.grid{gap:12px}.stack{gap:10px}.taskListRow{gap:5px;padding-right:5px}.taskMain{min-width:64px}.taskListRow .taskCheck{flex-basis:30px;width:30px}.taskSignals{gap:5px}.taskSignals i{min-width:23px;padding:2px 3px}.taskSignals b{gap:2px}.taskSignals .deadline{padding-left:5px}.timeline{height:420px}.draft{padding:14px}.draftHead{top:-14px}.draftRow{grid-template-columns:1fr}.draftActions{bottom:-14px}.planningDays button{font-size:12px;padding:4px 1px}.testToolbar{padding:12px}}
 @media(max-width:360px){.taskSignals{gap:4px}.taskSignals .icon{display:none}.taskSignals .deadline{padding-left:4px}.taskTitle{font-size:13px}.taskListRow{padding-left:3px}}
 .quickTask>div.quickTaskField{display:flex;gap:0;margin:0;padding:0;border-top:1px solid #d6dbe4}
+.plannerDialog:has(.planDraft){width:min(1120px,calc(100% - 32px))}
+.planViewSwitch{display:flex;align-items:center;width:max-content;margin:0 0 12px;padding:3px;border:1px solid var(--line);border-radius:9px;background:#f5f6f8}
+.planViewSwitch button{min-height:32px;padding:4px 10px;border:0;background:transparent;color:var(--muted)}
+.planViewSwitch button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px #20263218}
+.planViewSwitch .icon{width:15px;height:15px}
+.weekPlan{display:grid;grid-template-columns:repeat(7,minmax(125px,1fr));gap:8px;direction:rtl;min-height:280px;margin-top:4px}
+.weekDay{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fafbfc;overflow:hidden}
+.weekDay.disabled{opacity:.48;background:#f5f6f8}
+.weekDay>header{display:block;min-height:auto;margin:0;padding:9px 8px 8px;border-bottom:1px solid var(--line);direction:rtl}
+.weekDay>header div{display:flex;align-items:baseline;justify-content:space-between;gap:4px}
+.weekDay>header strong{font-size:13px;font-weight:650;white-space:nowrap}
+.weekDay>header span{font-size:11px;color:var(--muted);white-space:nowrap}
+.weekDay>header>b{display:block;margin-top:4px;color:var(--muted);font-size:11px;font-weight:500;direction:ltr;text-align:right}
+.weekDay>header>b.over{color:var(--red)}
+.weekDayTasks{display:flex;flex:1;flex-direction:column;gap:5px;padding:7px;min-height:180px}
+.weekTask{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:5px;min-height:34px;padding:5px 6px;border:1px solid #e3e6ec;border-right:3px solid var(--project);border-radius:6px;background:#fff;direction:rtl}
+.weekTask span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:550}
+.weekTask b{font-size:10px;font-weight:500;color:var(--muted);direction:ltr}
+.weekEmpty{display:grid;place-items:center;min-height:60px;color:#a4aab5}
+@media(max-width:760px){.plannerDialog:has(.planDraft){width:calc(100% - 12px)}.weekPlan{display:flex;direction:rtl;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}.weekDay{flex:0 0 168px;scroll-snap-align:start}.weekDayTasks{min-height:150px}.planViewSwitch{margin-bottom:10px}}
