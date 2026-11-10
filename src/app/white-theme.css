@@ -65,3 +65,4 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .taskListRow.isCompleted .taskMain::before{filter:grayscale(1)}
 .weekEmpty{display:grid;place-items:center;min-height:60px;color:#a4aab5}
 @media(max-width:760px){.plannerDialog:has(.planDraft){width:calc(100% - 12px)}.weekPlan{display:flex;direction:rtl;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px}.weekDay{flex:0 0 168px;scroll-snap-align:start}.weekDayTasks{min-height:150px}.planViewSwitch{margin-bottom:10px}}
+.planningDays>div{direction:rtl}
