@@ -67,6 +67,9 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .taskDetailMeta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .taskDetailMeta span{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
 .taskDetailMeta b{color:var(--ink);font-weight:600}
+.completionHistory{grid-column:1/-1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;color:var(--muted);font-size:12px}
+.completionHistory ul{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;padding:0;list-style:none}
+.completionHistory li{padding:4px 8px;border-radius:6px;background:#f2f4f7;color:var(--ink)}
 .taskListRow,.confirmedRow{border-inline-start:1px solid #e3e6ec;border-inline-end:4px solid var(--project)}
 .taskMain{position:relative;isolation:isolate;gap:6px}
 .taskMain::before{content:"";position:absolute;z-index:-1;inset-block:1px;inset-inline-start:0;width:34px;border-radius:6px;background:var(--project)}

@@ -1,5 +1,5 @@
 export type DeadlineKind = "none" | "hard" | "flexible";
-export type Task = { id:string; title:string; projectId?:string; duration:number; estimateSource:"default"|"manual"; importance?:number; urgency?:number; deadline?:string; deadlineKind:DeadlineKind; plannedDay?:string; completed:boolean; completedAt?:string; createdAt:string };
+export type Task = { id:string; title:string; projectId?:string; duration:number; estimateSource:"default"|"manual"; importance?:number; urgency?:number; deadline?:string; deadlineKind:DeadlineKind; plannedDay?:string; completed:boolean; completedAt?:string; completionHistory?:string[]; createdAt:string };
 export type Note = { id:string; text:string; createdAt:string };
 export type Project = { id:string; name:string; color:string };
 export type Appointment = { id:string; title:string; day:string; start:number; end:number; blocking:boolean };
