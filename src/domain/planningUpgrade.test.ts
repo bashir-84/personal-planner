@@ -36,6 +36,12 @@ describe("planning upgrades",()=>{
     const moved=makeDraft([task],[day],[],{},0,undefined,{day,minute:540},current);
     expect(comparePlans(current,moved.items)).toContainEqual({taskId:task.id,kind:"moved",from:"2026-11-11",to:day});
   });
+  it("keeps a feasible draft move while comparing against the confirmed plan",()=>{
+    const task=base("adjusted");const confirmed=[{taskId:task.id,day}];const preference=[{taskId:task.id,day:"2026-11-11"}];
+    const draft=makeDraft([task],[day,"2026-11-11"],[],{},0,undefined,{day,minute:540},confirmed,preference);
+    expect(draft.items[0].day).toBe("2026-11-11");
+    expect(draft.changes).toContainEqual({taskId:task.id,kind:"moved",from:day,to:"2026-11-11"});
+  });
   it("keeps each stage contiguous and orders stages across days without parent double count",()=>{
     const task={...base("staged",180),stages:[{id:"a",title:"A",duration:90,completed:false},{id:"b",title:"B",duration:90,completed:false}]};
     const draft=makeDraft([task],[day,"2026-11-11"],[],{[day]:90,"2026-11-11":90},0,undefined,{day,minute:540});

@@ -65,3 +65,18 @@ test("completed history in a test scenario stays separate from personal history"
   await page.getByRole("link",{name:"Completed Tasks"}).click();
   await expect(page.locator(".completedItem")).toHaveCount(0);
 });
+
+test("an unscheduled task can be placed manually with real warnings",async({page})=>{
+  await page.goto("./");
+  await page.getByRole("textbox",{name:"Task title"}).fill("Twenty hour task");
+  await page.getByRole("button",{name:"Add task details"}).click();
+  const editor=page.getByRole("dialog",{name:"New task"});
+  await editor.getByLabel("Duration hours").fill("20");
+  await editor.getByRole("button",{name:"Confirm"}).click();
+  await page.getByRole("button",{name:"Plan tasks"}).click();
+  await expect(page.getByLabel("Unscheduled tasks")).toContainText("Split required");
+  await page.getByRole("combobox",{name:"Place Twenty hour task"}).selectOption({index:1});
+  await expect(page.locator(".draft .warning").first()).toBeVisible();
+  await page.getByRole("button",{name:"Confirm with warnings"}).click();
+  await expect(page.locator(".confirmedRow")).toContainText("Twenty hour task");
+});
