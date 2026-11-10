@@ -198,7 +198,7 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .menuDialog .draftHead{margin-bottom:12px}
 .menuItem{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 12px;border-color:var(--line);background:#fff;text-align:right;font-size:14px;font-weight:600}
 .menuItem .icon{width:18px;height:18px;color:#2447b7}
-.mobileNavLabel{display:none}
+.navLabel{display:inline;font-size:10px;font-weight:500;line-height:1;opacity:.72}
 .calendarAddEvent{position:relative;flex:none}
 .calendarAddEvent>summary{display:grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:#fff;color:#2447b7;list-style:none;cursor:pointer}
 .calendarAddEvent>summary .icon{width:18px;height:18px}
@@ -244,6 +244,27 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
 .backgroundActions{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
 .backgroundActions .primary{min-width:120px}.backgroundClear{color:var(--red);border-color:#e8c2c8}
 @media(max-width:600px){.backgroundInputs{grid-template-columns:1fr;gap:10px}.backgroundPreview{min-height:150px}.backgroundActions .primary{min-width:100px}.backgroundDialog{padding:16px}}
+
+/* Compact date navigation and mobile cards. */
+.minimalHeader{position:relative}
+.minimalHeader .dateNavigation{position:absolute;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:34px auto 34px;align-items:center;justify-content:center;gap:2px}
+.minimalHeader .datePrevious,.minimalHeader .dateNext{display:grid;place-items:center;width:34px;min-width:34px;min-height:28px;height:28px;padding:0;border:0;background:transparent;color:var(--muted);box-shadow:none}
+.minimalHeader .datePrevious:hover,.minimalHeader .dateNext:hover{background:transparent;color:var(--ink)}
+@media(max-width:760px){
+ .shell{width:calc(100% - 8px)}
+ .minimalHeader .dateNavigation{position:static;transform:none;grid-column:1/-1;grid-row:1;grid-template-columns:30px auto 30px;justify-content:center;gap:1px}
+ .minimalHeader .datePrevious,.minimalHeader .dateNext{width:30px!important;min-width:30px!important;padding:0!important}
+ .minimalHeader .navLabel{font-size:9px;opacity:.58}
+ .minimalHeader .datePicker{flex:0 1 auto}
+ .minimalHeader .datePicker summary{padding-inline:3px}
+ .grid .topNewTask,.grid .confirmedCard{padding:5px 4px}
+ .grid .topNewTask .cardHead,.grid .confirmedCard .cardHead{margin-bottom:3px;padding-inline:4px;min-height:25px}
+ .grid .topNewTask .cardHead h2,.grid .confirmedCard .cardHead h2{font-size:14px;line-height:1.2}
+ .grid .quickTaskField{height:30px;min-height:30px;border-radius:7px}
+ .grid .quickTaskField>input{min-height:28px!important;height:28px;padding:2px 3px!important;font-size:12px}
+ .grid .quickTaskField>button{width:28px;min-width:28px;min-height:28px;height:28px;padding:0}
+ .grid .quickTaskField>button .icon{width:14px;height:14px}
+}
 
 /* Contrast changes apply only to controls painted directly over the photo. */
 .hasBackground{--on-photo:#20242c;--photo-text-shadow:0 1px 2px #ffffff70}
