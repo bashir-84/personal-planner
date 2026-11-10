@@ -21,4 +21,35 @@ body{background:#f2f5f3}
 .undoToast span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .undoToast button{border-color:#ffffff55;background:#ffffff16;color:white;padding:7px 10px}
 .taskDialog{width:min(620px,100%)}.taskDialog .editorGrid{margin-top:6px}.taskDialog .dangerButton{grid-column:1/-1;padding:10px}
+.taskEditorGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;align-items:start}
+.taskEditorGrid>.editorHint,.taskEditorGrid>.taskTitleField,.taskEditorGrid>.taskEditorActions,.taskEditorGrid>.completionHistory{grid-column:1/-1}
+.taskEditorGrid label{min-width:0}
+.taskEditorGrid input,.taskEditorGrid select{min-width:0}
+.taskEditorGrid fieldset{min-width:0;margin:0;padding:0;border:0}
+.taskEditorGrid legend{margin-bottom:6px;font-size:12px;color:var(--muted);font-weight:600}
+.projectSelectWrap{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--line);border-radius:9px;background:white}
+.projectSelectWrap select{border:0!important;padding:6px 2px!important;flex:1;background:transparent!important}
+.projectColorSwatch{display:block;flex:0 0 20px;width:20px;height:20px;border:1px solid #17211c22;border-radius:6px}
+.durationInputs,.deadlineInputs{display:flex;gap:8px}
+.durationInputs>label{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.durationInputs input{width:100%;text-align:center;direction:ltr}
+.deadlineInputs>label{flex:1;min-width:0}
+.deadlineInputs input{width:100%;direction:ltr;text-align:center}
+.deadlineTypeOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.deadlineTypeOptions label{display:flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:5px 7px;border:1px solid var(--line);border-radius:8px;background:white;font-size:12px;cursor:pointer}
+.deadlineTypeOptions label.selected{border-color:var(--green);background:var(--mint);color:var(--ink)}
+.deadlineTypeOptions input,.ratingScale input{position:absolute;opacity:0;width:1px;height:1px}
+.ratingScale{display:flex;align-items:center;gap:0;direction:ltr}
+.ratingScale label{position:relative;display:grid;place-items:center;flex:1;min-height:38px;cursor:pointer}
+.ratingScale label::before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;background:#dce2dc}
+.ratingScale label:first-child::before{left:50%}.ratingScale label:last-child::before{right:50%}
+.ratingScale span{position:relative;display:grid;place-items:center;width:22px;height:22px;border:2px solid #aab5ac;border-radius:50%;background:white;color:var(--muted);font-size:10px;font-weight:700}
+.ratingScale label.selected span{border-color:var(--green);background:var(--green);color:white}
+.ratingScale label:focus-within span,.deadlineTypeOptions label:focus-within{outline:2px solid #205d4780;outline-offset:2px}
+.taskEditorActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.taskEditorActions .dangerButton{grid-column:auto;margin:0;flex:1;min-height:42px}
+.taskDeleteButton{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:8px 12px;border-color:#e6b9bf;color:var(--red);white-space:nowrap}
+.taskDeleteButton.isConfirming{background:#fff0f2;border-color:var(--red);font-weight:700}
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:600px){.taskListRow{grid-template-columns:1fr}.taskSignals{padding-inline-start:25px}.undoToast{bottom:12px}}
+@media(max-width:600px){.taskEditorGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 10px}.taskEditorGrid>.taskTitleField{grid-column:1/-1}.taskEditorGrid .taskProjectField{grid-column:1}.taskEditorGrid .taskDurationField{grid-column:2}.taskEditorGrid .deadlineTypeField{grid-column:1/-1}.taskEditorGrid .taskDeadlineField{grid-column:1/-1}.taskEditorGrid .ratingField{grid-column:span 1}.taskEditorGrid .deadlineTypeOptions label{min-height:34px;padding:4px;font-size:11px}.taskEditorGrid .editorHint{margin-bottom:0}.taskEditorGrid input,.taskEditorGrid select{padding:8px;font-size:14px}.taskEditorActions{gap:6px}.taskEditorActions .dangerButton,.taskDeleteButton{min-height:38px;padding:7px 9px;font-size:12px}}

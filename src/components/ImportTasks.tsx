@@ -18,11 +18,14 @@ export function ImportTasks() {
   const [copied, setCopied] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, Partial<Task>>>({});
+  const [deletedKeys, setDeletedKeys] = useState<string[]>([]);
 
   const allWarnings = preview?.rows.flatMap(row => row.warnings.map(w => "#" + row.index + ": " + w)) ?? [];
   const warningsPresent = allWarnings.length > 0 || Boolean(preview?.warnings.length);
   const invalidEdits = preview?.rows.some(row => row.task && edits[row.sourceKey] && (!((edits[row.sourceKey].title ?? row.task.title).trim()) || !Number.isInteger(edits[row.sourceKey].duration ?? row.task.duration) || (edits[row.sourceKey].duration ?? row.task.duration) < 1)) ?? false;
-  const canApply = Boolean(preview && !preview.errors.length && preview.validCount > 0 && !invalidEdits && (!warningsPresent || acceptWarnings));
+  const deletedCount = preview?.rows.filter(row => row.task && deletedKeys.includes(row.sourceKey)).length ?? 0;
+  const importableCount = Math.max(0, (preview?.validCount ?? 0) - deletedCount);
+  const canApply = Boolean(preview && !preview.errors.length && importableCount > 0 && !invalidEdits && (!warningsPresent || acceptWarnings));
   const panel: React.CSSProperties = {
     background: "#fff", border: "1px solid #e7e9ea", borderRadius: 16, padding: 20
   };
@@ -33,7 +36,7 @@ export function ImportTasks() {
 
   const changeText = (value: string) => {
     setText(value); setPreview(null); setAcceptWarnings(false);
-    setMessage(""); setSuccess(false); setEdits({}); setEditingKey(null);
+    setMessage(""); setSuccess(false); setEdits({}); setEditingKey(null); setDeletedKeys([]);
   };
 
   async function readFile(e: ChangeEvent<HTMLInputElement>) {
@@ -47,7 +50,7 @@ export function ImportTasks() {
   }
 
   function check() {
-    setEdits({}); setEditingKey(null);
+    setEdits({}); setEditingKey(null); setDeletedKeys([]);
     setPreview(prepareImport(text, loadState()));
     setAcceptWarnings(false);
     setMessage("");
@@ -73,6 +76,9 @@ export function ImportTasks() {
         setMessage("Planner data changed. Review the refreshed preview.");
         return;
       }
+      current.rows = current.rows.filter(row => !deletedKeys.includes(row.sourceKey));
+      current.validCount = current.rows.filter(row => row.status === "ready" && row.task).length;
+      current.duplicateCount = current.rows.filter(row => row.status === "duplicate").length;
       // Edits made in the shared task form are applied to the newly validated rows.
       // prepareImport assigns fresh IDs to projects that are not saved yet. Resolve
       // an edited preview project by name so its ID survives this second validation.
@@ -172,16 +178,17 @@ export function ImportTasks() {
               <tbody>
                 {preview.rows.map(row => {
                   const task = row.task ? { ...row.task, ...(edits[row.sourceKey] ?? {}) } : undefined;
-                  return <tr key={row.index} style={{ borderTop: "1px solid #edf0f0" }}>
+                  const removed = deletedKeys.includes(row.sourceKey);
+                  return <tr key={row.index} style={{ borderTop: "1px solid #edf0f0", opacity: removed ? .45 : 1 }}>
                     <td style={{ padding: 8 }}>{row.index}</td>
                     <td>{(edits[row.sourceKey]?.title ?? row.title) || "—"}</td>
-                    <td>{row.status}</td>
+                    <td>{removed ? "Removed" : row.status}</td>
                     <td>{task?.duration ?? "—"}{task ? (task.estimateSource === "default" ? " min (default)" : " min") : ""}</td>
                     <td>{task ? projectName(task.projectId) : "—"}</td>
                     <td>{task ? `I${task.importance ?? "—"} · U${task.urgency ?? "—"}` : "—"}</td>
                     <td>{task ? displayDeadline(task.deadline) : "—"}</td>
                     <td style={{ maxWidth: 450 }}>
-                      {row.task && <button type="button" style={{...button, display:"inline-flex", alignItems:"center", gap:5, padding:"5px 9px", marginBottom:5 }} aria-label={`Edit ${row.title}`} title={`Edit ${row.title}`} onClick={()=>setEditingKey(row.sourceKey)}><Icon name="edit" /> Edit</button>}
+                      {row.task && !removed && <button type="button" style={{...button, display:"inline-flex", alignItems:"center", gap:5, padding:"5px 9px", marginBottom:5 }} aria-label={`Edit ${row.title}`} title={`Edit ${row.title}`} onClick={()=>setEditingKey(row.sourceKey)}><Icon name="edit" /> Edit</button>}
 
                       {row.errors.map((err, i) => <div key={"e" + i} style={{ color: "#ad2929" }}>{err}</div>)}
                       {row.warnings.map((w, i) => <div key={"w" + i} style={{ color: "#8c6000" }}>{w}</div>)}
@@ -199,11 +206,11 @@ export function ImportTasks() {
           )}
           <button type="button" onClick={apply} disabled={!canApply}
             style={{ ...button, background: canApply ? "#16325a" : "#e7e9ea", color: canApply ? "#fff" : "#888", justifySelf: "start" }}>
-            Import {preview.validCount} Task(s)
+            Import {importableCount} Task(s)
           </button>
         </section>
       )}
-      {currentEditedTask && editingRow && <TaskEditDialog task={currentEditedTask} projects={editorProjects} onClose={()=>setEditingKey(null)} onChange={patch=>setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),...patch}}))} onToggle={completed=>{setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),completed}}));setEditingKey(null)}}/>}
+      {currentEditedTask && editingRow && <TaskEditDialog task={currentEditedTask} projects={editorProjects} onClose={()=>setEditingKey(null)} onChange={patch=>setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),...patch}}))} onToggle={completed=>{setEdits(previous=>({...previous,[editingRow.sourceKey]:{...(previous[editingRow.sourceKey] ?? {}),completed}}));setEditingKey(null)}} onDelete={()=>{setDeletedKeys(previous=>[...previous,editingRow.sourceKey]);setEditingKey(null)}}/>}
     </main>
   );
 }
