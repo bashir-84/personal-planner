@@ -1,0 +1,49 @@
+import {incomingWins} from "./version";
+
+interface D1Result<T=unknown>{results?:T[];success:boolean;meta?:unknown}
+interface D1PreparedStatement{bind(...values:unknown[]):D1PreparedStatement;first<T=Record<string,unknown>>():Promise<T|null>;run():Promise<D1Result> ;all<T=Record<string,unknown>>():Promise<D1Result<T>>}
+interface D1Database{prepare(query:string):D1PreparedStatement}
+type Env={PLANNER_DB:D1Database;SYNC_PEPPER:string};
+type Operation={operationId:string;deviceId:string;entityType:string;entityId:string;patch:Record<string,unknown>;clientUpdatedAt:string};
+type FieldRow={entity_type:string;entity_id:string;field_name:string;value_json:string;client_updated_at:string;operation_id:string;sequence:number};
+const allowedOrigins=new Set(["https://bashiramri.ir","http://localhost:3000","http://localhost:3100"]);
+const entityTypes=new Set(["task","project","appointment","dailyCapacity","confirmed","settings"]);
+
+function cors(origin:string|null):Record<string,string>{return origin&&allowedOrigins.has(origin)?{"access-control-allow-origin":origin,"access-control-allow-headers":"authorization, content-type","access-control-allow-methods":"POST, GET, OPTIONS","access-control-max-age":"86400","vary":"Origin"}:{}}
+function json(body:unknown,status=200,headers:HeadersInit={}){return new Response(JSON.stringify(body),{status,headers:{"content-type":"application/json; charset=utf-8",...headers}})}
+function failure(code:string,message:string,status:number,headers:HeadersInit={}){return json({ok:false,error:{code,message}},status,headers)}
+function validText(value:unknown,max:number){return typeof value==="string"&&value.length>0&&value.length<=max}
+function normalizeOperation(value:unknown,requestDeviceId:string):Operation|undefined{
+  if(!value||typeof value!=="object")return;const item=value as Partial<Operation>;
+  if(!validText(item.operationId,128)||!validText(item.deviceId,128)||item.deviceId!==requestDeviceId||!validText(item.entityType,40)||!entityTypes.has(item.entityType!)||!validText(item.entityId,256)||!item.patch||typeof item.patch!=="object"||Array.isArray(item.patch)||Object.keys(item.patch).length>200||!validText(item.clientUpdatedAt,40))return;
+  const date=new Date(item.clientUpdatedAt!);if(Number.isNaN(date.getTime()))return;
+  return{operationId:item.operationId!,deviceId:item.deviceId!,entityType:item.entityType!,entityId:item.entityId!,patch:item.patch as Record<string,unknown>,clientUpdatedAt:date.toISOString()};
+}
+async function ownerId(key:string,pepper:string){const cryptoKey=await crypto.subtle.importKey("raw",new TextEncoder().encode(pepper),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const digest=await crypto.subtle.sign("HMAC",cryptoKey,new TextEncoder().encode(key));return[...new Uint8Array(digest)].map(value=>value.toString(16).padStart(2,"0")).join("")}
+async function sequence(db:D1Database,owner:string){const row=await db.prepare("UPDATE sync_cursors SET sequence = sequence + 1 WHERE owner_id = ? RETURNING sequence").bind(owner).first<{sequence:number}>();if(!row)throw new Error("Cursor allocation failed");return row.sequence}
+function entityKey(type:string,id:string){return`${type}\u0000${id}`}
+async function fullChange(db:D1Database,owner:string,type:string,id:string){const result=await db.prepare("SELECT entity_type, entity_id, field_name, value_json, client_updated_at, operation_id, sequence FROM sync_field_versions WHERE owner_id = ? AND entity_type = ? AND entity_id = ? ORDER BY field_name").bind(owner,type,id).all<FieldRow>();const rows=result.results??[];if(!rows.length)return null;const patch:Record<string,unknown>={},versions:Record<string,{clientUpdatedAt:string;operationId:string}>={};let highest=0;for(const row of rows){patch[row.field_name]=JSON.parse(row.value_json);versions[row.field_name]={clientUpdatedAt:row.client_updated_at,operationId:row.operation_id};highest=Math.max(highest,row.sequence)}return{entityType:type,entityId:id,patch,versions,sequence:highest}}
+
+async function sync(request:Request,env:Env,headers:HeadersInit){
+  const authorization=request.headers.get("authorization");if(!authorization?.startsWith("Bearer "))return failure("UNAUTHORIZED","A Sync Key is required.",401,headers);const key=authorization.slice(7).trim();if(key.length<40||key.length>512)return failure("INVALID_SYNC_KEY","The Sync Key is invalid.",401,headers);
+  if(Number(request.headers.get("content-length")??0)>1_000_000)return failure("PAYLOAD_TOO_LARGE","Sync payload is too large.",413,headers);
+  let input:unknown;try{input=await request.json()}catch{return failure("INVALID_JSON","Request body must be valid JSON.",400,headers)}
+  if(!input||typeof input!=="object")return failure("INVALID_REQUEST","Invalid sync request.",400,headers);const body=input as{cursor?:unknown;deviceId?:unknown;operations?:unknown};
+  if(!Number.isInteger(body.cursor)||Number(body.cursor)<0||!validText(body.deviceId,128)||!Array.isArray(body.operations)||body.operations.length>500)return failure("INVALID_REQUEST","cursor, deviceId or operations are invalid.",400,headers);
+  const operations=body.operations.map(value=>normalizeOperation(value,String(body.deviceId)));if(operations.some(value=>!value))return failure("INVALID_OPERATION","One or more operations are invalid.",400,headers);
+  const owner=await ownerId(key,env.SYNC_PEPPER);const now=new Date().toISOString();const db=env.PLANNER_DB;
+  await db.prepare("INSERT OR IGNORE INTO sync_owners (owner_id, created_at, last_seen_at) VALUES (?, ?, ?)").bind(owner,now,now).run();await db.prepare("UPDATE sync_owners SET last_seen_at = ? WHERE owner_id = ?").bind(now,owner).run();await db.prepare("INSERT OR IGNORE INTO sync_cursors (owner_id, sequence) VALUES (?, 0)").bind(owner).run();
+  const applied:string[]=[],ignored:string[]=[],touched=new Set<string>();
+  for(const item of operations as Operation[]){
+    const prior=await db.prepare("SELECT status FROM sync_operations WHERE owner_id = ? AND operation_id = ?").bind(owner,item.operationId).first<{status:string}>();if(prior){(prior.status==="applied"?applied:ignored).push(item.operationId);for(const field of Object.keys(item.patch))touched.add(entityKey(item.entityType,item.entityId));continue}
+    const winners:[string,unknown][]=[];
+    for(const[field,value]of Object.entries(item.patch)){if(field.length>160)continue;const current=await db.prepare("SELECT client_updated_at, operation_id FROM sync_field_versions WHERE owner_id = ? AND entity_type = ? AND entity_id = ? AND field_name = ?").bind(owner,item.entityType,item.entityId,field).first<{client_updated_at:string;operation_id:string}>();if(incomingWins({clientUpdatedAt:item.clientUpdatedAt,operationId:item.operationId},current?{clientUpdatedAt:current.client_updated_at,operationId:current.operation_id}:undefined))winners.push([field,value])}
+    let seq:number|undefined;if(winners.length){seq=await sequence(db,owner);for(const[field,value]of winners)await db.prepare("INSERT INTO sync_field_versions (owner_id, entity_type, entity_id, field_name, value_json, client_updated_at, operation_id, sequence) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(owner_id, entity_type, entity_id, field_name) DO UPDATE SET value_json=excluded.value_json, client_updated_at=excluded.client_updated_at, operation_id=excluded.operation_id, sequence=excluded.sequence").bind(owner,item.entityType,item.entityId,field,JSON.stringify(value),item.clientUpdatedAt,item.operationId,seq).run();applied.push(item.operationId)}else ignored.push(item.operationId);
+    const status=winners.length?"applied":"ignored";await db.prepare("INSERT INTO sync_operations (owner_id, operation_id, device_id, entity_type, entity_id, patch_json, client_updated_at, received_at, sequence, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").bind(owner,item.operationId,item.deviceId,item.entityType,item.entityId,JSON.stringify(item.patch),item.clientUpdatedAt,now,seq??null,status).run();touched.add(entityKey(item.entityType,item.entityId));
+  }
+  const changed=await db.prepare("SELECT DISTINCT entity_type, entity_id FROM sync_field_versions WHERE owner_id = ? AND sequence > ? ORDER BY sequence LIMIT 5000").bind(owner,body.cursor).all<{entity_type:string;entity_id:string}>();for(const row of changed.results??[])touched.add(entityKey(row.entity_type,row.entity_id));
+  const changes=[];for(const value of touched){const[type,id]=value.split("\u0000");const change=await fullChange(db,owner,type,id);if(change)changes.push(change)}changes.sort((a,b)=>a.sequence-b.sequence||a.entityType.localeCompare(b.entityType)||a.entityId.localeCompare(b.entityId));
+  const cursor=await db.prepare("SELECT sequence FROM sync_cursors WHERE owner_id = ?").bind(owner).first<{sequence:number}>();return json({ok:true,nextCursor:cursor?.sequence??0,appliedOperationIds:applied,ignoredOperationIds:ignored,changes,serverTime:now},200,headers);
+}
+
+export default{async fetch(request:Request,env:Env){const url=new URL(request.url),origin=request.headers.get("origin"),headers=cors(origin);if(origin&&!allowedOrigins.has(origin))return failure("ORIGIN_NOT_ALLOWED","This origin is not allowed.",403,headers);if(request.method==="OPTIONS")return new Response(null,{status:204,headers});if(request.method==="GET"&&url.pathname==="/health")return json({service:"personal-planner-sync",status:"ready",schema:1},200,headers);if(request.method==="POST"&&url.pathname==="/v1/sync")try{return await sync(request,env,headers)}catch{return failure("INTERNAL_ERROR","Sync could not be completed.",500,headers)}return failure("NOT_FOUND","Endpoint not found.",404,headers)}};

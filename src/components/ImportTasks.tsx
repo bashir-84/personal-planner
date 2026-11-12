@@ -1,13 +1,14 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import { TaskEditDialog } from "./TaskEditDialog";
 import { importReadmeMarkdown } from "@/content/importReadme";
-import type { Task } from "@/domain/types";
+import type { PlannerState,Task } from "@/domain/types";
 import { prepareImport, mergeImport, type ImportPreview } from "@/domain/taskImport";
-import { loadState, saveState } from "@/storage/local";
+import {emptyState} from "@/storage/local";
+import {commitIndexedPlanner,loadIndexedPlanner} from "@/storage/indexed";
 
 export function ImportTasks() {
   const [text, setText] = useState("");
@@ -19,6 +20,9 @@ export function ImportTasks() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, Partial<Task>>>({});
   const [deletedKeys, setDeletedKeys] = useState<string[]>([]);
+  const [plannerState,setPlannerState]=useState<PlannerState>(emptyState);
+  const [storageError,setStorageError]=useState("");
+  useEffect(()=>{loadIndexedPlanner().then(result=>setPlannerState(result.state)).catch(error=>setStorageError(error instanceof Error?error.message:"IndexedDB is unavailable"))},[]);
 
   const allWarnings = preview?.rows.flatMap(row => row.warnings.map(w => "#" + row.index + ": " + w)) ?? [];
   const warningsPresent = allWarnings.length > 0 || Boolean(preview?.warnings.length);
@@ -51,16 +55,16 @@ export function ImportTasks() {
 
   function check() {
     setEdits({}); setEditingKey(null); setDeletedKeys([]);
-    setPreview(prepareImport(text, loadState()));
+    setPreview(prepareImport(text, plannerState));
     setAcceptWarnings(false);
     setMessage("");
     setSuccess(false);
   }
 
-  function apply() {
+  async function apply() {
     if (!canApply) return;
     try {
-      const latest = loadState();
+      const latest = (await loadIndexedPlanner()).state;
       const current = prepareImport(text, latest);
       if (current.errors.length) {
         setPreview(current);
@@ -99,7 +103,8 @@ export function ImportTasks() {
         row.task = { ...row.task, ...patch };
       }
       const next = mergeImport(current, latest);
-      saveState(next);
+      await commitIndexedPlanner(latest,next);
+      setPlannerState(next);
       setMessage("Imported " + current.validCount + " task(s). Existing tasks were kept.");
       setSuccess(true);
       setPreview(null);
@@ -110,7 +115,7 @@ export function ImportTasks() {
 
   const editingRow = preview?.rows.find(row => row.sourceKey === editingKey && row.task);
   const currentEditedTask = editingRow?.task ? { ...editingRow.task, ...(edits[editingRow.sourceKey] ?? {}) } : undefined;
-  const editorProjects = [...loadState().projects, ...(preview?.projects ?? [])];
+  const editorProjects = [...plannerState.projects, ...(preview?.projects ?? [])];
   const projectName = (projectId?: string) => editorProjects.find(project => project.id === projectId)?.name ?? "—";
   const displayDeadline = (deadline?: string) => deadline
     ? new Intl.DateTimeFormat("fa-IR-u-ca-persian", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Tehran" }).format(new Date(deadline))
@@ -127,6 +132,7 @@ export function ImportTasks() {
 
   return (
     <main style={{ maxWidth: 980, margin: "0 auto", padding: "32px 20px 70px", color: "#203036" }}>
+      {storageError&&<p className="settingsError" role="alert">{storageError}</p>}
       <nav style={{ marginBottom: 22 }}><Link href="/">← Planner</Link></nav>
       <header style={{ marginBottom: 24 }}>
         <h1 style={{ marginBottom: 8 }}>Import Tasks</h1>

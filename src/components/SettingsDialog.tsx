@@ -5,12 +5,13 @@ import type {PlannerSettings,PlannerState} from "@/domain/types";
 import {clockValue,DEFAULT_SETTINGS,normalizeSettings,parseClock} from "@/domain/settings";
 import {Modal} from "./Modal";
 import {Icon} from "./Icon";
+import {SyncPanel} from "./SyncPanel";
 
 export type PlannerBackup={schemaVersion:1;exportedAt:string;state:PlannerState;background?:unknown};
 const weekdays=[{value:6,label:"Sat"},{value:0,label:"Sun"},{value:1,label:"Mon"},{value:2,label:"Tue"},{value:3,label:"Wed"},{value:4,label:"Thu"},{value:5,label:"Fri"}];
 
-export function SettingsDialog({settings,onClose,onSave,onBackground,onExport,onImport}:{
-  settings:PlannerSettings;onClose:()=>void;onSave:(settings:PlannerSettings)=>void;onBackground:()=>void;onExport:()=>void;onImport:(backup:PlannerBackup)=>void;
+export function SettingsDialog({settings,plannerState,onPlannerState,onClose,onSave,onBackground,onExport,onImport}:{
+  settings:PlannerSettings;plannerState:PlannerState;onPlannerState:(state:PlannerState)=>void;onClose:()=>void;onSave:(settings:PlannerSettings)=>void;onBackground:()=>void;onExport:()=>void;onImport:(backup:PlannerBackup)=>void;
 }){
   const[draft,setDraft]=useState(()=>structuredClone(settings));const[tab,setTab]=useState<"general"|"advanced">("general");const[error,setError]=useState("");const[pending,setPending]=useState<PlannerBackup|null>(null);const input=useRef<HTMLInputElement>(null);
   const general=draft.general,advanced=draft.advanced;
@@ -33,6 +34,7 @@ export function SettingsDialog({settings,onClose,onSave,onBackground,onExport,on
       <fieldset><legend>Planning</legend><label>Suggestion horizon (days)<input type="number" min="1" max="30" value={advanced.planningHorizonDays} onChange={event=>updateAdvanced({planningHorizonDays:Number(event.target.value)})}/></label><label className="settingsCheck"><input type="checkbox" checked={advanced.preserveManualLayout} onChange={event=>updateAdvanced({preserveManualLayout:event.target.checked})}/>Preserve manual layout for equal suggestions</label><label className="settingsCheck"><input type="checkbox" checked={advanced.showReasons} onChange={event=>updateAdvanced({showReasons:event.target.checked})}/>Show suggestion reasons</label><label className="settingsCheck"><input type="checkbox" checked={advanced.showComparison} onChange={event=>updateAdvanced({showComparison:event.target.checked})}/>Compare with current plan</label><small>Horizon is limited to 1–30 days. Safety warnings remain visible.</small></fieldset>
       <fieldset><legend>Manual capacity</legend><div className="settingsReadOnly"><span>Mode <b>Remaining work budget</b></span></div><small>The budget is measured from the time it is entered; completion and Undo retain the existing behavior.</small></fieldset>
       <fieldset><legend>Repeating tasks</legend><label>Generation horizon (days)<input type="number" min="1" max="90" value={advanced.recurrenceHorizonDays} onChange={event=>updateAdvanced({recurrenceHorizonDays:Number(event.target.value)})}/></label><small>New tasks still default to no recurrence. Existing completed occurrences are retained.</small></fieldset>
+      <SyncPanel state={plannerState} onState={onPlannerState}/>
       <fieldset><legend>Data & offline</legend><div className="settingsDataActions"><button type="button" onClick={onExport}>Export backup</button><button type="button" onClick={()=>input.current?.click()}>Import backup</button><input ref={input} hidden type="file" accept="application/json,.json" onChange={event=>readBackup(event.target.files?.[0])}/></div><small>Settings, tasks, projects, plans, appointments and background are included. Offline availability is provided by the installed service worker.</small></fieldset>
       <button type="button" className="settingsReset" onClick={()=>setDraft(value=>({...value,advanced:structuredClone(DEFAULT_SETTINGS.advanced)}))}>Reset Advanced</button>
     </div>}

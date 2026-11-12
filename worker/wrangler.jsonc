@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "personal-planner-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-12",
+  "account_id": "3b927f9511550dc49d7b78e8690a94fd",
+  "d1_databases": [
+    {
+      "binding": "PLANNER_DB",
+      "database_name": "personal-planner-sync",
+      "database_id": "9178c0ec-e285-4e95-ab2a-e1d51ff90ba5",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
