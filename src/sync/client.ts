@@ -16,13 +16,15 @@ async function request(syncKey:string,deviceId:string,cursor:number,operations:S
 async function runSync(){
   if(typeof navigator!=="undefined"&&!navigator.onLine)throw new Error("You are offline. Changes remain safely queued on this device.");
   let latest:PlannerState|undefined;
-  for(let round=0;round<20;round++){
+  // D1 executes each field merge independently. Small batches keep an initial
+  // device upload below Worker/D1 subrequest limits and remain retry-safe.
+  for(let round=0;round<100;round++){
     const{connection,operations,state}=await getSyncContext();if(!connection.syncKey)throw new Error("This device is not connected to Sync.");
-    const batch=operations.slice(0,200);const response=await request(connection.syncKey,connection.deviceId,connection.cursor,batch);latest=await applySyncSuccess(response);
+    const batch=operations.slice(0,5);const response=await request(connection.syncKey,connection.deviceId,connection.cursor,batch);latest=await applySyncSuccess(response);
     if(operations.length<=batch.length)return latest;
     if(batch.length===0)return latest;
   }
-  throw new Error("Too many pending changes for one sync. Press Sync again to continue.");
+  throw new Error("Some changes are still pending. Press Sync again to continue.");
 }
 export function syncNow(){if(active)return active;active=runSync().catch(async error=>{const message=error instanceof Error?error.message:"Sync failed";await setSyncError(message);throw error}).finally(()=>{active=undefined});return active}
 
