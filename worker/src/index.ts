@@ -6,7 +6,7 @@ interface D1Database{prepare(query:string):D1PreparedStatement}
 type Env={PLANNER_DB:D1Database;SYNC_PEPPER:string};
 type Operation={operationId:string;deviceId:string;entityType:string;entityId:string;patch:Record<string,unknown>;clientUpdatedAt:string};
 type FieldRow={entity_type:string;entity_id:string;field_name:string;value_json:string;client_updated_at:string;operation_id:string;server_sequence:number};
-const allowedOrigins=new Set(["https://bashiramri.ir","http://localhost:3000","http://localhost:3100"]);
+const allowedOrigins=new Set(["https://bashiramri.ir","https://bashir-84.github.io","http://localhost:3000","http://localhost:3100"]);
 const entityTypes=new Set(["task","project","appointment","dailyCapacity","confirmed","settings"]);
 
 function cors(origin:string|null):Record<string,string>{return origin&&allowedOrigins.has(origin)?{"access-control-allow-origin":origin,"access-control-allow-headers":"authorization, content-type","access-control-allow-methods":"POST, GET, OPTIONS","access-control-max-age":"86400","vary":"Origin"}:{}}

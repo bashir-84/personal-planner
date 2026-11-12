@@ -7,7 +7,7 @@ let active:Promise<PlannerState>|undefined;
 export function createSyncKey(){const bytes=crypto.getRandomValues(new Uint8Array(32));return btoa(String.fromCharCode(...bytes)).replaceAll("+","-").replaceAll("/","_").replace(/=+$/g,"")}
 
 async function request(syncKey:string,deviceId:string,cursor:number,operations:SyncOperation[]):Promise<SyncResponse>{
-  const response=await fetch(SYNC_ENDPOINT,{method:"POST",headers:{"content-type":"application/json","authorization":`Bearer ${syncKey}`},body:JSON.stringify({cursor,deviceId,operations})});
+  let response:Response;try{response=await fetch(SYNC_ENDPOINT,{method:"POST",headers:{"content-type":"application/json","authorization":`Bearer ${syncKey}`},body:JSON.stringify({cursor,deviceId,operations})})}catch{throw new Error("Could not reach Sync. Check your internet connection and reload the latest version of the app.")}
   const body=await response.json().catch(()=>null) as SyncResponse|{ok:false;error?:{message?:string}}|null;
   if(!response.ok||!body||body.ok!==true)throw new Error(body&&body.ok===false&&body.error?.message?body.error.message:`Sync request failed (${response.status})`);
   return body;
