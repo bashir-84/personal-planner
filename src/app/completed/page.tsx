@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {formatTracked} from "@/components/TaskTimer";
 import {useEffect,useMemo,useState} from "react";
 import {TaskEditDialog} from "@/components/TaskEditDialog";
 import type {PlannerState,Task} from "@/domain/types";
@@ -31,7 +32,7 @@ export default function CompletedPage(){
   const reopen=(id:string)=>setState(current=>({...current,revision:current.revision+1,tasks:current.tasks.map(item=>item.id===id?{...item,completed:false,completedAt:undefined,completedDay:undefined}:item),confirmed:current.confirmed.filter(item=>item.taskId!==id)}));
   return <main className="completedPage"><header><Link href={storageKey===PERSONAL_KEY?"/":"/test"}>← Planner</Link><h1>Completed Tasks</h1><span>{completed.length}</span></header>{completed.length?<div className="completedList">{completed.map(item=>{
     const project=state.projects.find(project=>project.id===item.projectId);
-    return <button className="completedItem" key={item.id} onClick={()=>setEditing(item.id)} style={{borderInlineStartColor:project?.color??"#8a968f"}}><strong>{item.title}{item.targetDay&&<small> · {dateOnly.format(new Date(`${item.targetDay}T12:00:00Z`))}</small>}</strong><span>{project?.name??"No project"} · {Math.floor(item.duration/60)}:{String(item.duration%60).padStart(2,"0")}</span><span>{item.deadline?`Due ${dateTime.format(new Date(item.deadline))}`:"No deadline"}</span><time>{completionLabel(item)}</time></button>})}</div>:<p className="completedEmpty">No completed tasks yet.</p>}
+    return <button className="completedItem" key={item.id} onClick={()=>setEditing(item.id)} style={{borderInlineStartColor:project?.color??"#8a968f"}}><strong>{item.title}{item.targetDay&&<small> · {dateOnly.format(new Date(`${item.targetDay}T12:00:00Z`))}</small>}</strong><span>{project?.name??"No project"} · {Math.floor(item.duration/60)}:{String(item.duration%60).padStart(2,"0")}</span><span>Tracked {formatTracked(item.trackedSeconds??0)}</span><span>{item.deadline?`Due ${dateTime.format(new Date(item.deadline))}`:"No deadline"}</span><time>{completionLabel(item)}</time></button>})}</div>:<p className="completedEmpty">No completed tasks yet.</p>}
     {task&&<TaskEditDialog task={task} projects={state.projects} onClose={()=>setEditing(null)} onChange={patch=>update(task.id,patch)} onToggle={complete=>{if(!complete)reopen(task.id);setEditing(null)}}/>}
   </main>;
 }

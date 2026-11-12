@@ -49,7 +49,7 @@ export function expandRecurrences(tasks:Task[],throughDay:string):Task[]{
       const id=`${template.id}@${day}`;
       if(ids.has(id))continue;
       const stages=template.stages?.map((stage:TaskStage)=>({...stage,id:`${stage.id}@${day}`,completed:false,completedAt:undefined,completedDay:undefined,parentActionId:undefined}));
-      added.push({...template,id,recurrence:undefined,recurrenceSourceId:template.id,targetDay:day,skipped:false,completed:false,completedAt:undefined,completedDay:undefined,completionRecords:[],stages});
+      added.push({...template,id,trackedSeconds:0,timerStartedAt:undefined,recurrence:undefined,recurrenceSourceId:template.id,targetDay:day,skipped:false,completed:false,completedAt:undefined,completedDay:undefined,completionRecords:[],stages});
       ids.add(id);
     }
   }
