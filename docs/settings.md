@@ -9,6 +9,8 @@ Settings schema version 1 is stored inside the existing local planner state. Loa
 | Active work days | All seven days | Inactive days have zero automatic capacity; a manual daily budget remains allowed with a warning |
 | New task duration | 30 minutes | New tasks only |
 | New deadline type / time | None / 12:00 | New task editor only; existing tasks are unchanged |
+| New task project | No Project | New tasks only |
+| New task importance / urgency | 3 / 2 | New tasks only |
 | Week starts | Saturday | Weekly navigation and planning views |
 | Calendar / time zone | Persian / Asia/Tehran | Fixed read-only values because the date pipeline is currently Tehran-specific |
 | Suggestion horizon | 7 days, range 1–30 | Candidate days for planning |

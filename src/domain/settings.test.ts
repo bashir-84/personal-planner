@@ -31,5 +31,6 @@ describe("planner settings",()=>{
   it("migrates missing and invalid values to centralized defaults",()=>{
     expect(normalizeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
     expect(normalizeSettings({general:{...DEFAULT_SETTINGS.general,workRatio:2}}).general.workRatio).toBe(1);
+    expect(normalizeSettings({general:{...DEFAULT_SETTINGS.general,defaultImportance:9,defaultUrgency:-1}}).general).toMatchObject({defaultImportance:5,defaultUrgency:1});
   });
 });
