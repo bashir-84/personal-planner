@@ -1,4 +1,5 @@
 export type DeadlineKind = "none" | "hard" | "flexible";
+export type PlannerSettings = { version:number; general:{ workStart:number; workEnd:number; workRatio:number; activeWeekdays:number[]; defaultTaskDuration:number; defaultDeadlineKind:DeadlineKind; defaultDeadlineTime:string; weekStartsOn:number; timeZone:"Asia/Tehran"; calendar:"persian" }; advanced:{ planningHorizonDays:number; preserveManualLayout:boolean; showReasons:boolean; showComparison:boolean; recurrenceHorizonDays:number; manualCapacityMode:"remaining-work-budget" } };
 export type CompletionRecord = { day:string; completedAt:string };
 export type TaskStage = { id:string; title:string; duration:number; completed:boolean; completedAt?:string; completedDay?:string; parentActionId?:string };
 export type Recurrence = { frequency:"daily"|"weekly"; startDay:string; interval:number; weekdays?:number[]; endDay?:string; sameDay:boolean };
@@ -10,7 +11,7 @@ export type PlanItem = { taskId:string; stageId?:string; day:string; start?:numb
 export type UnscheduledItem = { taskId:string; stageId?:string; status:"waiting"|"no-slot"|"split"|"deadline"; reason:string };
 export type PlanChange = { taskId:string; kind:"added"|"moved"|"removed"|"reordered"; from?:string; to?:string };
 export type Draft = { id:string; baseRevision:number; createdAt:string; items:PlanItem[]; conflicts:Conflict[]; unscheduled?:UnscheduledItem[]; changes?:PlanChange[] };
-export type Conflict = { type:"capacity"|"continuity"|"deadline"|"target"|"order"|"changed"; day?:string; taskId?:string; minutes?:number; message:string };
-export type PlannerState = { revision:number; projects:Project[]; tasks:Task[]; notes:Note[]; appointments:Appointment[]; confirmed:PlanItem[]; draft?:Draft; manualBudgets:Record<string,number>; manualBudgetEntries?:Record<string,{day:string;minutes:number;recordedAt:string}> };
+export type Conflict = { type:"capacity"|"continuity"|"deadline"|"target"|"order"|"inactive"|"changed"; day?:string; taskId?:string; minutes?:number; message:string };
+export type PlannerState = { revision:number; projects:Project[]; tasks:Task[]; notes:Note[]; appointments:Appointment[]; confirmed:PlanItem[]; draft?:Draft; manualBudgets:Record<string,number>; manualBudgetEntries?:Record<string,{day:string;minutes:number;recordedAt:string}>; settings:PlannerSettings };
 export type TestScenario = { id:string; title:string; appointments:Appointment[]; manualBudgets:Record<string,number>; confirmed:PlanItem[]; expected:string };
 export type TestDataset = { schemaVersion:number; referenceDate:string; referenceTime:string; timeZone:string; projects:Project[]; tasks:Task[]; scenarios:TestScenario[] };

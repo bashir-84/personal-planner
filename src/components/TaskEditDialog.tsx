@@ -22,9 +22,9 @@ const persianDateValue = (timestamp?: string) => {
   const value = (type: string) => parts.find(part => part.type === type)?.value ?? "";
   return `${value("year")}/${value("month")}/${value("day")}`;
 };
-const localClock = (timestamp?: string) => timestamp
+const localClock = (timestamp?: string, fallback="12:00") => timestamp
   ? new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Tehran", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(timestamp))
-  : "12:00";
+  : fallback;
 const persianToGregorian = (input: string) => {
   const normalized = input.replace(/[۰-۹]/g, digit => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))).replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
   const match = normalized.trim().match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
@@ -92,7 +92,7 @@ export function TaskEditDialog({ task, projects, onChange, onToggle, onDelete, o
   </Modal>;
 }
 
-export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClose, referenceDay, referenceInstant }: {
+export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClose, referenceDay, referenceInstant, defaultDeadlineTime="12:00" }: {
   task: Task;
   projects: PlannerState["projects"];
   onChange: (patch: Partial<Task>) => void;
@@ -100,6 +100,7 @@ export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClos
   onClose: () => void;
   referenceDay?: string;
   referenceInstant?: string;
+  defaultDeadlineTime?: string;
 }) {
   const [valid,setValid]=useState(true);
   return <Modal label="New task" onClose={onClose}>
@@ -107,13 +108,13 @@ export function TaskComposerDialog({ task, projects, onChange, onConfirm, onClos
       <div className="draftHead"><div><span className="eyebrow">Task</span><h2>New task</h2></div>
         <button className="iconButton" aria-label="Close" title="Close" onClick={onClose}><Icon name="close" /></button>
       </div>
-      <TaskEditor task={task} projects={projects} referenceDay={referenceDay} referenceInstant={referenceInstant} onValidityChange={setValid} onChange={onChange} onToggle={() => undefined} showActions={false} showHint={false} />
+      <TaskEditor task={task} projects={projects} referenceDay={referenceDay} referenceInstant={referenceInstant} defaultDeadlineTime={defaultDeadlineTime} onValidityChange={setValid} onChange={onChange} onToggle={() => undefined} showActions={false} showHint={false} />
       <div className="taskDialogConfirm"><button className="primary" disabled={!task.title.trim()||!valid} onClick={onConfirm}>Confirm</button></div>
     </section>
   </Modal>;
 }
 
-export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSkip, showActions = true, showHint = true, referenceDay, referenceInstant, onValidityChange }: {
+export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSkip, showActions = true, showHint = true, referenceDay, referenceInstant, defaultDeadlineTime="12:00", onValidityChange }: {
   task: Task;
   projects: PlannerState["projects"];
   onChange: (patch: Partial<Task>) => void;
@@ -124,6 +125,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSki
   showHint?: boolean;
   referenceDay?: string;
   referenceInstant?: string;
+  defaultDeadlineTime?: string;
   onValidityChange?: (valid:boolean)=>void;
 }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -140,7 +142,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSki
   const project = projects.find(item => item.id === task.projectId);
   const durationHours = Math.floor(task.duration / 60);
   const durationMinutes = task.duration % 60;
-  const timeValue = localClock(task.deadline);
+  const timeValue = localClock(task.deadline,defaultDeadlineTime);
   const setDuration = (hours: number, minutes: number) => onChange({ duration: Math.max(1, hours * 60 + minutes), estimateSource: "manual" });
   const setDeadlineDate = (value: string) => {
     if (!value) { onChange({ deadline: undefined,deadlineKind:"none" }); return; }
@@ -188,7 +190,7 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSki
     </div></fieldset>
     <fieldset className="taskDeadlineField"><legend>Deadline · شمسی</legend><div className="deadlineInputs">
       <label><span className="srOnly">Persian date, year/month/day</span><input dir="ltr" inputMode="numeric" placeholder="۱۴۰۵/۰۸/۱۹" aria-label="Deadline Persian date" aria-invalid={Boolean(invalidDate)} value={jalaliDate} onChange={event => { setJalaliDate(event.target.value); setDeadlineDate(event.target.value); }} /></label>
-      <label><span className="srOnly">Time</span><input dir="ltr" type="time" aria-label="Deadline time" value={task.deadline ? timeValue : "12:00"} disabled={!task.deadline} onChange={event => setDeadlineTime(event.target.value)} /></label>
+      <label><span className="srOnly">Time</span><input dir="ltr" type="time" aria-label="Deadline time" value={timeValue} disabled={!task.deadline} onChange={event => setDeadlineTime(event.target.value)} /></label>
       <label><span className="srOnly">Days from today</span><input dir="ltr" type="number" step="1" aria-label="Days from today" placeholder="Days" value={relativeDays} onChange={event=>{const raw=event.target.value;if(raw===""){setJalaliDate("");onChange({deadline:undefined,deadlineKind:"none"});return}const count=Number(raw);if(!Number.isInteger(count)||Math.abs(count)>36500)return;const target=dayOffset(todayDay,count);const stamp=dateWithTime(target,timeValue);setJalaliDate(persianDateValue(stamp));onChange({deadline:stamp,deadlineKind:task.deadlineKind==="none"?"flexible":task.deadlineKind})}}/></label>
     </div>{invalidDate&&<small role="alert">Enter a valid Persian date</small>}{typeof relativeDays==="number"&&relativeDays<0&&<small>Past · {Math.abs(relativeDays)} days</small>}</fieldset>
     <RatingField label="Importance" value={task.importance} onChange={value => onChange({ importance: value })} />
