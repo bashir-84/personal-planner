@@ -10,6 +10,7 @@ import {
 } from "../storage/indexed";
 import type { SyncJoinMode, SyncOperation, SyncResponse } from "./types";
 import { SYNC_ENDPOINT } from "./types";
+import { writeLog } from "@/storage/logs";
 
 let active: Promise<PlannerState> | undefined;
 export function createSyncKey() {
@@ -88,9 +89,12 @@ async function runSync() {
 }
 export function syncNow() {
   if (active) return active;
+  writeLog("sync", "Manual Sync started");
   active = runSync()
+    .then((state) => { writeLog("sync", "Manual Sync completed"); return state; })
     .catch(async (error) => {
       const message = error instanceof Error ? error.message : "Sync failed";
+      writeLog(message.includes("Google") ? "google" : "sync", "Manual Sync failed", "error", message);
       await setSyncError(message);
       throw error;
     })
