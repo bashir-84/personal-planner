@@ -77,7 +77,7 @@ async function runSync() {
     if (operations.length <= batch.length) {
       const current=latest;
       const google=await fetch("https://personal-planner-sync.bashiramri84.workers.dev/v1/google/events",{headers:{authorization:`Bearer ${connection.syncKey}`}});
-      if(google.ok){const body=await google.json() as {appointments?:PlannerState["appointments"]};if(body.appointments&&current){const incoming=new Map(body.appointments.map(item=>[item.id,item]));const appointments=[...current.appointments.filter(item=>item.source!=="google"||incoming.has(item.id)).map(item=>incoming.get(item.id)??item),...body.appointments.filter(item=>!current.appointments.some(existing=>existing.id===item.id))];const next={...current,appointments,revision:current.revision+1};await commitIndexedPlanner(current,next);return next}}
+      if(google.ok){const body=await google.json() as {appointments?:PlannerState["appointments"]};if(body.appointments&&current){const incoming=new Map(body.appointments.map(item=>[item.id,item]));const appointments=[...current.appointments.filter(item=>item.source!=="google"||incoming.has(item.id)).map(item=>incoming.get(item.id)??item),...body.appointments.filter(item=>!current.appointments.some(existing=>existing.id===item.id))];const next={...current,appointments,revision:current.revision+1};await commitIndexedPlanner(current,next);return next}}else{const failure=await google.json().catch(()=>null) as {error?:{message?:string}}|null;throw new Error(failure?.error?.message??`Google Calendar sync failed (${google.status}).`)}
       return current;
     }
     if (batch.length === 0) return latest;
