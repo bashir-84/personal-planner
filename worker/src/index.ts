@@ -65,6 +65,7 @@ function cors(origin: string | null): Record<string, string> {
         "access-control-allow-origin": origin,
         "access-control-allow-headers": "authorization, content-type",
         "access-control-allow-methods": "POST, GET, OPTIONS",
+        "access-control-expose-headers": "cf-ray",
         "access-control-max-age": "86400",
         vary: "Origin",
       }
@@ -623,7 +624,10 @@ async function googleEvents(request: Request, env: Env, headers: HeadersInit) {
   for (const calendar of rows.results ?? []) {
     const query = new URLSearchParams({singleEvents:"true",showDeleted:"false",maxResults:"2500",timeMin:new Date(Date.now()-90*86400000).toISOString(),timeMax:new Date(Date.now()+365*86400000).toISOString()});
     const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.calendar_id)}/events?${query}`, {headers:{authorization:`Bearer ${token}`}});
-    const data = await response.json() as {items?:any[]}; if (!response.ok) continue;
+    if (!response.ok) {
+      return failure(`GOOGLE_UPSTREAM_HTTP_${response.status}`, "Google Calendar rejected the event request.", 502, headers);
+    }
+    const data = await response.json() as {items?:any[]};
     for (const event of data.items ?? []) {const allDay=Boolean(event.start?.date);const start=allDay?new Date(`${event.start.date}T00:00:00`):new Date(event.start.dateTime);const end=allDay?new Date(`${event.end.date}T00:00:00`):new Date(event.end.dateTime);const day=allDay?event.start.date:new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Tehran"}).format(start);const minute=(date:Date)=>{const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Tehran",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(date);return Number(p.find(x=>x.type==="hour")?.value)*60+Number(p.find(x=>x.type==="minute")?.value)};appointments.push({id:`google:${calendar.calendar_id}:${event.id}`,title:event.summary||"(Untitled)",day,start:allDay?0:minute(start),end:allDay?1440:minute(end),blocking:!allDay&&event.transparency!=="transparent",description:event.description,location:event.location,allDay,source:"google",googleCalendarId:calendar.calendar_id,googleEventId:event.id,googleUpdated:event.updated,googleUrl:event.htmlLink,readOnly:!calendar.writable});}
   }
   await env.PLANNER_DB.prepare("UPDATE google_connections SET last_sync_at=?,last_error=NULL WHERE owner_id=?").bind(new Date().toISOString(),owner).run();
