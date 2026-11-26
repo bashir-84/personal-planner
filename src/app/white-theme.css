@@ -194,6 +194,9 @@ button,input,select{min-height:var(--control)}button{border-radius:8px;padding:7
  .capacityDialog .wide{margin-top:10px}
 }
 .headerActions{display:flex;align-items:center;gap:7px}
+.taskListRow:has(.taskScheduleActions){flex-wrap:wrap}
+.taskScheduleActions{display:flex;flex:0 0 100%;justify-content:flex-end;gap:6px}
+.taskScheduleActions button{min-height:44px;padding:4px 10px;font-size:12px}
 .menuButton{display:grid;place-items:center;width:40px;height:40px;min-height:40px;padding:0;border-color:var(--line);background:#fff;color:var(--muted)}
 .menuButton:hover{background:#f1f4f9;color:#2447b7}
 .menuButton .icon{width:19px;height:19px}
