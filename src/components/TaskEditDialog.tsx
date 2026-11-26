@@ -135,15 +135,28 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSki
   const todayDay=referenceDay??tehranReferenceTime(new Date()).day;
   const invalidDate=jalaliDate.trim().length>0&&!persianToGregorian(jalaliDate);
   const invalidRepeat=Boolean(task.recurrence)&&(!persianToGregorian(repeatStart)||Boolean(repeatEnd&&!persianToGregorian(repeatEnd)));
-  useEffect(()=>onValidityChange?.(!invalidDate&&!invalidRepeat),[invalidDate,invalidRepeat,onValidityChange]);
+  const [hoursText,setHoursText]=useState<string|null>(null);
+  const [minutesText,setMinutesText]=useState<string|null>(null);
+  const hoursValue=hoursText??String(Math.floor(task.duration/60));
+  const minutesValue=minutesText??String(task.duration%60);
+  const readNumber=(value:string)=>{
+    const normalized=value.trim().replace(/[۰-۹٠-٩]/g,digit=>String(digit.charCodeAt(0)&15));
+    return /^\d*$/.test(normalized)?Number(normalized):NaN;
+  };
+  const duration=readNumber(hoursValue)*60+readNumber(minutesValue);
+  const invalidDuration=!Number.isSafeInteger(duration)||duration<1;
+  useEffect(()=>onValidityChange?.(!invalidDate&&!invalidRepeat&&!invalidDuration),[invalidDate,invalidRepeat,invalidDuration,onValidityChange]);
   const relativeDays=invalidDate?"":task.deadline?deadlineDayOffset(task.deadline,todayDay):"";
   useEffect(() => setJalaliDate(persianDateValue(task.deadline)), [task.id, task.deadline]);
   useEffect(()=>{setRepeatStart(task.recurrence?persianDateValue(dateWithTime(task.recurrence.startDay,"12:00")):"");setRepeatEnd(task.recurrence?.endDay?persianDateValue(dateWithTime(task.recurrence.endDay,"12:00")):"")},[task.id,task.recurrence?.startDay,task.recurrence?.endDay]);
   const project = projects.find(item => item.id === task.projectId);
-  const durationHours = Math.floor(task.duration / 60);
-  const durationMinutes = task.duration % 60;
   const timeValue = localClock(task.deadline,defaultDeadlineTime);
-  const setDuration = (hours: number, minutes: number) => onChange({ duration: Math.max(1, hours * 60 + minutes), estimateSource: "manual" });
+  const commitDuration=()=>{
+    if(invalidDuration||(hoursText===null&&minutesText===null))return;
+    onChange({duration,estimateSource:"manual"});
+    setHoursText(null);
+    setMinutesText(null);
+  };
   const setDeadlineDate = (value: string) => {
     if (!value) { onChange({ deadline: undefined,deadlineKind:"none" }); return; }
     const gregorian = persianToGregorian(value);
@@ -179,10 +192,10 @@ export function TaskEditor({ task, projects, onChange, onToggle, onDelete, onSki
         <option value="">No project</option>{projects.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
       </select>
     </div></label>
-    <fieldset className="taskDurationField"><legend>Duration</legend><div className="durationInputs">
-      <label><input type="number" min="0" value={durationHours} aria-label="Duration hours" onChange={event => setDuration(Number(event.target.value) || 0, durationMinutes)} /><span>h</span></label>
-      <label><input type="number" min="0" max="59" value={durationMinutes} aria-label="Duration minutes" onChange={event => setDuration(durationHours, Math.min(59, Number(event.target.value) || 0))} /><span>min</span></label>
-    </div></fieldset>
+    <fieldset className="taskDurationField" onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget))commitDuration()}}><legend>Duration</legend><div className="durationInputs">
+      <label><input inputMode="numeric" value={hoursValue} aria-label="Duration hours" aria-invalid={invalidDuration} onChange={event=>setHoursText(event.target.value)}/><span>h</span></label>
+      <label><input inputMode="numeric" value={minutesValue} aria-label="Duration minutes" aria-invalid={invalidDuration} onChange={event=>setMinutesText(event.target.value)}/><span>min</span></label>
+    </div>{invalidDuration&&<small role="alert">Enter a total duration of at least one minute using whole numbers.</small>}</fieldset>
     <fieldset className="deadlineTypeField"><legend>Deadline type</legend><div className="deadlineTypeOptions" role="radiogroup" aria-label="Deadline type">
       {([ ["none", "None"], ["hard", "Hard"], ["flexible", "Flexible"] ] as const).map(([value, label]) => <label key={value} className={task.deadlineKind === value ? "selected" : ""}>
         <input type="radio" name={`deadline-${task.id}`} checked={task.deadlineKind === value} onChange={() => onChange(value==="none"?{deadlineKind:value,deadline:undefined}:{deadlineKind:value})} />{label}
